@@ -1,0 +1,111 @@
+---
+- name: Install lirou project code on a system
+  hosts: all
+
+  vars:
+    lirou_basedir: /opt/lirou
+    lirou_collectiondir: "{{(playbook_dir + '/..') | realpath}}"
+
+  tasks:
+
+    - name: Install packages
+      apt:
+        force_apt_get: yes
+        name:
+          - rsync
+          - ansible
+
+    - name: Ensure project folder structure
+      file:
+        path: "{{item}}"
+        owner: root
+        group: root
+        mode: u=rwx,go=-
+        state: directory
+      loop:
+        - "{{lirou_basedir}}/collections/ansible_collections/brickburg/linuxrouter"
+        - "{{lirou_basedir}}/inventory"
+        - "{{lirou_basedir}}/roles"
+
+    - name: Create ansible.cfg
+      copy:
+        dest: "{{lirou_basedir}}/ansible.cfg"
+        owner: root
+        group: root
+        mode: u=rw,go=-
+        content: |
+          [defaults]
+          inventory = {{lirou_basedir}}/inventory
+          forks          = 5
+          roles_path    = {{lirou_basedir}}/roles
+          collections_paths = {{lirou_basedir}}/collections
+          log_path = /var/log/lirou-ansible-apply.log
+          interpreter_python = auto_silent
+          remote_user = root
+          #vault_password_file = ./bbansible/gpg-vault-client.sh
+          display_skipped_hosts = False
+          nocows = True
+
+          [privilege_escalation]
+          become = False
+          #become_method = sudo
+          #become_user = root
+          #become_ask_pass = False
+
+          [ssh_connection]
+          retries = 3
+          pipelining = True
+
+    - name: Create ansible config dir
+      file:
+        path: /etc/ansible
+        owner: root
+        group: root
+        mode: u=rwx,go=-
+        state: directory
+
+    - name: Symlink ansible.cfg to ansible config dir
+      file:
+        src: "{{lirou_basedir}}/ansible.cfg"
+        dest: /etc/ansible/ansible.cfg
+        owner: root
+        group: root
+        state: link
+
+    - name: Create inventory file
+      copy:
+        dest: "{{lirou_basedir}}/inventory/self.yml"
+        owner: root
+        group: root
+        mode: u=rw,go=-
+        content: |
+          lirounodes:
+            hosts:
+              lirou:
+                ansible_connection: local
+
+    - name: Upload code files
+      ansible.posix.synchronize:
+        src: "{{item.s}}"
+        dest: "{{item.d}}"
+        delete: true
+        group: false
+        mode: push
+        owner: false
+        perms: true
+        recursive: true
+        times: true
+      loop:
+        - { s: "{{lirou_collectiondir}}/", d: "{{lirou_basedir}}/collections/ansible_collections/brickburg/linuxrouter/" }
+
+    - name: Create start script
+      copy:
+        dest: /usr/local/sbin/lirou-apply.sh
+        owner: root
+        group: root
+        mode: u=rwx,go=-
+        content: |
+          #!/bin/bash
+
+          export PYTHONUNBUFFERED=1
+          ansible-playbook brickburg.linuxrouter.apply

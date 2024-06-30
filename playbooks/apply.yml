@@ -1,0 +1,8 @@
+---
+- name: Apply lirou configuration
+  hosts: lirounodes
+
+  tasks:
+
+    - debug:
+        var: playbook_dir
