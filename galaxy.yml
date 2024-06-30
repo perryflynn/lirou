@@ -1,0 +1,14 @@
+namespace: brickburg
+name: linuxrouter
+version: "0.1.0"
+readme: "README.md"
+authors:
+    - "Christian Blechert christian@serverless.industries>"
+license:
+    - "MIT"
+tags:
+    - networking
+    - router
+    - firewall
+    - nftables
+repository: https://git.brickburg.de/bbansible/linuxrouter
