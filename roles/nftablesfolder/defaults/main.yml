@@ -1,0 +1,4 @@
+---
+# brickburg/linuxrouter/roles/nftfolder/defaults/main.yml
+
+bbnftfolder_flushall: false

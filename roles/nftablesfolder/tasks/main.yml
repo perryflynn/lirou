@@ -1,0 +1,18 @@
+---
+# brickburg/linuxrouter/roles/nftfolder/tasks/main.yml
+
+- name: nftables base file
+  template:
+    src: files/nftables.conf.j2
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: u=rwx,g=r
+
+- name: Create ndtables directory
+  file:
+    path: /etc/nftables.d/
+    state: directory
+    owner: root
+    group: root
+    mode: u=rwx,go=rx

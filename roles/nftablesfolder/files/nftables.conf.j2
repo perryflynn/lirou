@@ -1,0 +1,7 @@
+#!/usr/sbin/nft -f
+
+{% if bbnftfolder_flushall %}
+flush ruleset
+{% endif %}
+
+include "/etc/nftables.d/*.nft"

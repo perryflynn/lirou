@@ -1,0 +1,27 @@
+---
+# brickburg/linuxrouter/roles/nftablesinstall/tasks/main.yml
+
+- name: Install netfilter
+  apt:
+    force_apt_get: yes
+    name:
+      - nftables
+      - netfilter-persistent
+
+- name: netfilter-persistent plugin
+  copy:
+    src: files/nft-plugin
+    dest: /usr/share/netfilter-persistent/plugins.d/15-nft
+    owner: root
+    group: root
+    mode: u=rwx,go=rx
+
+- name: Populate service facts
+  service_facts:
+
+- name: Disable nftables service
+  systemd:
+    name: 'nftables'
+    enabled: false
+    masked: true
+  when: "'nftables' in ansible_facts.services"
