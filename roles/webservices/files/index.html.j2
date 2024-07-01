@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{{lr.hostname}} - Linux Router</title>
+    </head>
+    <body>
+
+        <h1>{{lr.hostname}}</h1>
+        <p>
+            {{lr.description}}
+        </p>
+        <p>
+            <strong>Contact:</strong>
+            {{lr.admin}} &lt;<a href="mailto:{{lr.contact}}">{{lr.contact}}</a>&gt;
+        </p>
+
+        <h2>Services</h2>
+        <p>
+            Services hosted on this machine:
+        </p>
+
+        <ul>
+            <li><a href="/munin">Munin Monitoring</a></li>
+        </ul>
+
+        <hr style="margin-top: 40px;">
+        <p style="margin: 10px 0px 0px 0px; padding: 0px;">
+            Linux Router made with Ansible and Debian
+            by <a href="https://serverless.industries" target="_blank">serverless.industries</a>.
+            Last configured at {{ansible_date_time.iso8601}}.
+        </p>
+
+    </body>
+</html>

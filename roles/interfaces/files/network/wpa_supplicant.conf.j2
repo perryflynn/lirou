@@ -1,0 +1,13 @@
+# This file is managed by Ansible
+# It configures a wifi client with wpa_supplicant
+
+p2p_disabled=1
+country={{lr.wifi.country}}
+update_config=1
+
+network={
+    ssid="{{item.ssid}}"
+    psk="{{item.passphrase}}"
+}
+
+# eof

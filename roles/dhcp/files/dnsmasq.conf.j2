@@ -1,0 +1,28 @@
+# This file is managed by ansible
+# it configures the dnsmasq DNS and DHCP service
+
+# no wan interface
+{% if lr_upstreaminterfacenames|length > 0 %}
+except-interface={{lr_upstreaminterfacenames[0]}}
+{% endif %}
+
+# dns
+interface=lo
+listen-address=127.0.0.1
+
+{% for lan in lr.lans %}
+{% if lan.upstream|default(False) == False and 'dhcp' in lan %}
+# Interface '{{lan.name}}'
+interface={{lan.name}}
+listen-address={{lan.address}}
+
+dhcp-range=interface:{{lan.name}},{{lan.dhcp.start}},{{lan.dhcp.end}},{{lan.dhcp.lease}}
+dhcp-option=interface:{{lan.name}},option:domain-search,home.arpa
+
+{% endif %}
+{% endfor %}
+
+local=/home.arpa/
+address=/router.home.arpa/{{lr.primary_address}}
+
+# eof

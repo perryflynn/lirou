@@ -2,7 +2,57 @@
 - name: Apply lirou configuration
   hosts: lirounodes
 
+  vars_files:
+    - /etc/lirou/config.yml
+
+  # TODO: ansible-playbook --force-handlers
+
   tasks:
 
-    - debug:
-        var: playbook_dir
+    - name: Prepare Parameters
+      include_role:
+        name: brickburg.linuxrouter.params
+        apply: { tags: [ always ] }
+
+    - name: Configure OS
+      include_role:
+        name: brickburg.linuxrouter.osconfig
+        apply: { tags: [ system ] }
+
+    - name: Install Software
+      include_role:
+        name: brickburg.linuxrouter.software
+        apply: { tags: [ system ] }
+
+    - name: Setup Interfaces
+      include_role:
+        name: brickburg.linuxrouter.interfaces
+        apply: { tags: [ interfaces ] }
+
+    - name: Setup Interface Events
+      include_role:
+        name: brickburg.linuxrouter.interfaceevents
+        apply: { tags: [ interfaces ] }
+
+    - name: Setup DHCP
+      include_role:
+        name: brickburg.linuxrouter.dhcp
+        apply: { tags: [ interfaces ] }
+
+    - name: Setup Firewall
+      include_role:
+        name: brickburg.linuxrouter.firewall
+        apply: { tags: [ firewall ] }
+
+    - name: Setup webservices
+      include_role:
+        name: brickburg.linuxrouter.webservices
+        apply: { tags: [ services ] }
+
+    # - name: Force handlers
+    #   shell: 'true'
+    #   changed_when: 'True'
+    #   notify:
+    #     - all_handlers
+    #   when: 'lr.forcehandlers|default(False)'
+    #   tags: [ always ]

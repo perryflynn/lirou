@@ -1,0 +1,12 @@
+# This file is managed by Ansible
+# it defines a virtual wifi interface
+
+[NetDev]
+Name={{item.name}}
+Description={{item.description}}
+Kind=wlan
+MACAddress={{item.mac}}
+
+[WLAN]
+PhysicalDevice={{lr.wifi.phyname}}
+Type={{item.mode}}

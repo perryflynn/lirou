@@ -1,0 +1,264 @@
+---
+# brickburg/linuxrouter/roles/interfaces/tasks/main.yml
+
+- name: Install packages
+  apt:
+    force_apt_get: yes
+    name:
+      - bridge-utils
+      - hostapd
+      - iw
+      - wpasupplicant
+      - vlan
+      - firmware-atheros
+      - firmware-iwlwifi
+      - firmware-linux
+      - firmware-linux-nonfree
+      - firmware-misc-nonfree
+      - wireless-regdb
+      - wireless-tools
+
+- name: Uninstall packages
+  apt:
+    force_apt_get: yes
+    name:
+      - ifupdown
+      - dhcpcd
+      - isc-dhcp-client
+    state: absent
+
+- name: Enable networkd
+  systemd:
+    name: systemd-networkd
+    enabled: true
+    masked: false
+    state: started
+
+- name: Bridge-Utils configuration enable hotplug
+  lineinfile:
+    path: /etc/default/bridge-utils
+    regexp: 'BRIDGE_HOTPLUG='
+    line: BRIDGE_HOTPLUG=yes
+  notify:
+    - 'Reload networkd'
+
+- name: Bridge-Utils configuration disable ipv6 link local
+  lineinfile:
+    path: /etc/default/bridge-utils
+    regexp: 'BRIDGE_DISABLE_LINKLOCAL_IPV6_ALSO_PHYS='
+    line: BRIDGE_DISABLE_LINKLOCAL_IPV6_ALSO_PHYS=yes
+  notify:
+    - 'Reload networkd'
+
+- name: Kernel module settings for cfg80211
+  template:
+    src: files/modprobe.d/cfg80211.conf.j2
+    dest: /etc/modprobe.d/cfg80211.conf
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  when: lr.wifi.enabled
+
+- name: Delete kernel module settings for cfg80211
+  file:
+    path: /etc/modprobe.d/cfg80211.conf
+    state: absent
+  when: not lr.wifi.enabled
+
+- name: Default interfaces file
+  file:
+    path: /etc/network/interfaces
+    state: absent
+  notify:
+    - 'Reload networkd'
+
+- name: Interfaces directory
+  file:
+    path: /etc/network/interfaces.d
+    state: absent
+  notify:
+    - 'Reload networkd'
+
+- name: VLAN interface via systemd
+  template:
+    src: files/systemd/vlan.netdev.j2
+    dest: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present"'
+  loop: "{{lr.lans | selectattr('vlan', 'defined') | selectattr('vlan', 'eq', True)}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Remove obsolete VLAN interface from systemd
+  file:
+    path: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
+    state: absent
+  when: 'item.state == "absent"'
+  loop: "{{lr.lans | selectattr('vlan', 'defined') | selectattr('vlan', 'eq', True)}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Bridge interface via systemd
+  template:
+    src: files/systemd/bridge.netdev.j2
+    dest: "/etc/systemd/network/bridge-{{item.name}}.netdev"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present"'
+  loop: "{{lr.lans | selectattr('bridge', 'defined') | selectattr('bridge', 'eq', True)}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Remove obsolete Bridge interface from systemd
+  file:
+    path: "/etc/systemd/network/bridge-{{item.name}}.netdev"
+    state: absent
+  when: 'item.state == "absent"'
+  loop: "{{lr.lans | selectattr('bridge', 'defined') | selectattr('bridge', 'eq', True)}}"
+  notify:
+    - 'Reload networkd'
+
+- name: LAN interface via systemd
+  template:
+    src: files/systemd/lan.network.j2
+    dest: "/etc/systemd/network/{{item.name}}.network"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present"'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Remove obsolete LAN interfaces from systemd
+  file:
+    path: "/etc/systemd/network/{{item.name}}.network"
+    state: absent
+  when: 'item.state == "absent"'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Wifi interfaces via systemd
+  template:
+    src: files/systemd/wifi.netdev.j2
+    dest: "/etc/systemd/network/{{item.name}}.netdev"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present" and lr.wifi.name != item.name'
+  loop: "{{lr.wifi.software}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Remove obsolete wifi interfaces from systemd
+  file:
+    path: "/etc/systemd/network/{{item.name}}.netdev"
+    state: absent
+  when: 'item.state == "absent"'
+  loop: "{{lr.wifi.software}}"
+  notify:
+    - 'Reload networkd'
+
+- name: wpa_supplicant config files
+  template:
+    src: files/network/wpa_supplicant.conf.j2
+    dest: /etc/wpa_supplicant/wpa_supplicant-{{item.name}}.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+  when: 'item.mode == "station" and item.state == "present"'
+  loop: "{{lr.wifi.software}}"
+  notify:
+    - Restart wpa_supplicant
+
+- name: Cleanup obsolete wpa_supplicant config files
+  file:
+    path: /etc/wpa_supplicant/wpa_supplicant-{{item.name}}.conf
+    state: absent
+  when: 'item.mode == "station" and item.state == "absent"'
+  loop: "{{lr.wifi.software}}"
+  notify:
+    - Restart wpa_supplicant
+
+- name: Disable obsolete wpa_supplicant service unit
+  systemd:
+    name: "wpa_supplicant@{{item.name}}"
+    state: stopped
+    enabled: false
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "station" and item.state == "absent"'
+  notify:
+    - Restart wpa_supplicant
+
+- name: Enable wpa_supplicant service unit
+  systemd:
+    name: "wpa_supplicant@{{item.name}}"
+    enabled: true
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "station" and item.state == "present"'
+  notify:
+    - Restart wpa_supplicant
+
+- name: Disable default hostapd
+  systemd:
+    name: hostapd
+    state: stopped
+    enabled: false
+    masked: true
+
+- name: hostapd service unit file
+  template:
+    src: files/systemd/hostapd-lr.service.j2
+    dest: /etc/systemd/system/hostapd-lr@.service
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+  register: hostapdbaseunit
+  notify:
+    - Daemon reload
+    - Restart hostapd
+
+- name: hostapd config
+  template:
+    src: files/network/hostapd.conf.j2
+    dest: /etc/hostapd/hostapd-{{item.name}}.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "ap" and item.state == "present"'
+  register: hostapds
+  notify:
+    - Restart hostapd
+
+- name: Cleanup obsolete hostapd config
+  file:
+    path: /etc/hostapd/hostapd-{{item.name}}.conf
+    state: absent
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "ap" and item.state == "absent"'
+  notify:
+    - Restart hostapd
+
+- name: Disable obsolete hostapd service unit
+  systemd:
+    name: "hostapd-lr@{{item.name}}"
+    state: stopped
+    enabled: false
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "ap" and item.state == "absent"'
+  notify:
+    - Restart hostapd
+
+- name: Create and enable hostapd services
+  systemd:
+    name: "hostapd-lr@{{item.name}}"
+    enabled: true
+  loop: "{{lr.wifi.software}}"
+  when: 'item.mode == "ap" and item.state == "present"'
+  notify:
+    - Restart hostapd

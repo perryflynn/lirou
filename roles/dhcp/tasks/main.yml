@@ -1,0 +1,18 @@
+---
+# brickburg/linuxrouter/roles/dhcp/tasks/main.yml
+
+- name: Install dnsmasq
+  apt:
+    force_apt_get: yes
+    name:
+      - dnsmasq
+
+- name: dnsmasq config
+  template:
+    src: files/dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  notify:
+    - 'Restart dnsmasq'

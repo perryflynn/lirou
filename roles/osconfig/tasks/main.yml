@@ -1,0 +1,69 @@
+---
+# brickburg/linuxrouter/roles/osconfig/tasks/main.yml
+
+- name: Set hostname
+  hostname:
+    name: "{{lr.hostname}}"
+    use: debian
+
+- name: Root password
+  user:
+    name: root
+    password: "{{lr.root_password}}"
+
+- name: Root public keys
+  authorized_key:
+    user: root
+    key: "{{item.key}}"
+    comment: "{{item.comment}}"
+  loop: "{{lr.root_keys}}"
+
+- name: Kernel flags
+  sysctl:
+    name: "{{item.f}}"
+    value: "{{item.v}}"
+    sysctl_file: /etc/sysctl.d/42-linux-router.conf
+    reload: true
+    sysctl_set: true
+    state: "{{'present' if item.p else 'absent'}}"
+  loop:
+    - { f: 'net.ipv4.ip_forward', v: '1', p: true }
+    # disable ipv6 for now
+    - { f: 'net.ipv6.conf.all.disable_ipv6', v: '1', p: true }
+    - { f: 'net.ipv6.conf.default.disable_ipv6', v: '1', p: true }
+    - { f: 'net.ipv6.conf.all.forwarding', v: '1', p: false }
+    # https://blog.confirm.ch/sysctl-tuning-linux/
+    # ignore icmp broadcasts
+    - { f: 'net.ipv4.icmp_echo_ignore_broadcasts', v: '1', p: true }
+    - { f: 'net.ipv4.icmp_ignore_bogus_error_responses', v: '1', p: true }
+    # enable syn cookies
+    - { f: 'net.ipv4.tcp_syncookies', v: '1', p: true }
+    - { f: 'net.ipv4.tcp_max_syn_backlog', v: '2048', p: true }
+    - { f: 'net.ipv4.tcp_synack_retries', v: '3', p: true }
+    # disable source routing
+    - { f: 'net.ipv4.conf.all.accept_source_route', v: '0', p: true }
+    - { f: 'net.ipv4.conf.default.accept_source_route', v: '0', p: true }
+    # strict reverse path filtering
+    - { f: 'net.ipv4.conf.all.rp_filter', v: '1', p: true }
+    - { f: 'net.ipv4.conf.default.rp_filter', v: '1', p: true }
+    # socket buffers
+    - { f: 'net.ipv4.tcp_rmem', v: '4096 87380 8388608', p: true }
+    - { f: 'net.ipv4.tcp_wmem', v: '4096 87380 8388608', p: true }
+    # tcp window scaling
+    - { f: 'net.ipv4.tcp_window_scaling', v: '1', p: true }
+
+- name: Update sources.list
+  template:
+    src: files/sources.list.j2
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  register: sourcelist
+
+- name: Update package sources
+  apt:
+    force_apt_get: true
+    update_cache: true
+    cache_valid_time: 0
+  when: sourcelist.changed

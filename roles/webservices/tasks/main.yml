@@ -1,0 +1,37 @@
+---
+# brickburg/linuxrouter/roles/webservices/tasks/main.yml
+
+- name: Install munin
+  apt:
+    force_apt_get: yes
+    name:
+      - munin
+      - munin-node
+      - nginx-light
+
+- name: Bind munin-node to localhost
+  lineinfile:
+    path: /etc/munin/munin-node.conf
+    regexp: '^host\s'
+    line: host 127.0.0.1
+  notify:
+    - Restart munin-node
+    - Restart munin
+
+- name: Symlink munin into nginx www-root
+  file:
+    src: /var/cache/munin/www
+    dest: /var/www/html/munin
+    owner: root
+    group: root
+    state: link
+  notify:
+    - Restart nginx
+
+- name: Create index file
+  template:
+    src: files/index.html.j2
+    dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: u=rw,go=r

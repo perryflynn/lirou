@@ -16,6 +16,11 @@
     group: root
     mode: u=rwx,go=rx
 
+- name: Enable nftables-persistent service
+  systemd:
+    name: netfilter-persistent
+    enabled: true
+
 - name: Populate service facts
   service_facts:
 

@@ -1,0 +1,18 @@
+---
+# brickburg/linuxrouter/roles/interfaces/handlers/main.yml
+
+- name: 'Daemon reload'
+  systemd:
+    daemon_reload: true
+
+- name: 'Reload networkd'
+  shell:
+    cmd: 'networkctl reload'
+
+- name: 'Restart wpa_supplicant'
+  shell:
+    cmd: 'systemctl restart --all "wpa_supplicant@*.service"'
+
+- name: 'Restart hostapd'
+  shell:
+    cmd: 'systemctl restart --all "hostapd-lr@*.service"'

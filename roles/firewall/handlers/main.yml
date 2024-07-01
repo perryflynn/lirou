@@ -1,0 +1,7 @@
+---
+# brickburg/linuxrouter/roles/firewall/handlers/main.yml
+
+- name: 'Restart netfilter'
+  systemd:
+    name: netfilter-persistent
+    state: restarted

@@ -1,0 +1,61 @@
+#!/bin/bash
+
+CONF_INTERFACE="{{ddnsitem.interface}}"
+CONF_SERVER="{{ddnsitem.properties.server}}"
+CONF_DOMAIN="{{ddnsitem.properties.domain}}"
+CONF_KEY="/etc/nsupdate-ddns-{{ddnsitem.name}}.key"
+
+{# {
+    "Activation Policy": [ "up" ],
+    "Address": [ "192.168.42.221" ],
+    "AdministrativeState": "configuring",
+    "DNS": [ "192.168.99.111", "192.168.42.1" ],
+    "Driver": [ "ath10k_pci" ],
+    "Gateway": [ "192.168.42.1" ],
+    "IPv6 Address Generation Mode": [ "none" ],
+    "InterfaceName": "wlp5s0",
+    "Link File": [ "/usr/lib/systemd/network/99-default.link" ],
+    "NTP": [ "192.168.42.1" ],
+    "Network File": [ "/etc/systemd/network/wlp5s0.network" ],
+    "Online state": [ "online" ],
+    "OperationalState": "routable",
+    "State": "routable (configuring)",
+} #}
+
+if [ -z "$json" ]
+then
+    >&2 echo "networkd-dispatcher json ENV undefined"
+    exit 0
+fi
+
+interface=$(echo "$json" | jq -r -M '.InterfaceName')
+address=$(echo "$json" | jq -M -r '[ .Address[] | select(contains(":") | not) ][0]')
+opstate=$(echo "$json" | jq -r -M '.OperationalState')
+
+if [ ! "$interface" == "$CONF_INTERFACE" ]
+then
+    >&2 echo "Wrong interface '$interface' != '$CONF_INTERFACE'"
+    exit 0
+fi
+
+if [ ! "$opstate" == "routable" ]
+then
+    >&2 echo "Interface '$interface' not in routable state"
+    exit 0
+fi
+
+if [ -z "$address" ]
+then
+    >&2 echo "Found no IPv4 Address in interface '$interface'"
+    exit 0
+fi
+
+echo "
+server ${CONF_SERVER}
+update delete ${CONF_DOMAIN}. A
+update add ${CONF_DOMAIN}. 30 IN A ${address}
+update delete ${CONF_DOMAIN}. TXT
+update add ${CONF_DOMAIN}. 30 IN TXT "Last update: $(date)"
+send
+quit
+" | nsupdate -y "$(cat "$CONF_KEY")"

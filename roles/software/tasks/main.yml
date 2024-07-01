@@ -1,0 +1,50 @@
+---
+# brickburg/linuxrouter/roles/software/tasks/main.yml
+
+- name: Install packages
+  apt:
+    force_apt_get: yes
+    name:
+      - tcpdump
+      - rfkill
+      - net-tools
+      - dnsutils
+      - whois
+      - vim
+      - iperf3
+      - iperf
+      - jq
+      - htop
+      - lm-sensors
+      - smartmontools
+
+- name: Uninstall packages
+  apt:
+    force_apt_get: yes
+    state: absent
+    name:
+      - os-prober
+
+- name: vimrc
+  copy:
+    src: files/vimrc
+    dest: /root/.vimrc
+    owner: root
+    group: root
+    mode: u=rw,go=r
+
+- name: htop config folder
+  file:
+    path: /root/.config/htop
+    owner: root
+    group: root
+    mode: u=rwx,go=rx
+    state: directory
+
+- name: htop configuration
+  copy:
+    src: files/htoprc
+    dest: /root/.config/htop/htoprc
+    owner: root
+    group: root
+    mode: u=rw,go=r

@@ -4,6 +4,7 @@
 
   vars:
     lirou_basedir: /opt/lirou
+    lirou_etcdir: /etc/lirou
     lirou_collectiondir: "{{(playbook_dir + '/..') | realpath}}"
 
   tasks:
@@ -26,6 +27,15 @@
         - "{{lirou_basedir}}/collections/ansible_collections/brickburg/linuxrouter"
         - "{{lirou_basedir}}/inventory"
         - "{{lirou_basedir}}/roles"
+        - "{{lirou_etcdir}}"
+
+    - name: Copy config file
+      copy:
+        src: "{{lirou_configfile}}"
+        dest: "{{lirou_etcdir}}/config.yml"
+        owner: root
+        group: root
+        mode: u=rw,go-
 
     - name: Create ansible.cfg
       copy:

@@ -1,0 +1,25 @@
+---
+# brickburg/linuxrouter/roles/params/tasks/main.yml
+
+- name: Generate interface lists (static)
+  set_fact:
+    lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item.name ] }}"
+  when: 'item.state == "present" and ("address" in item or item.dhcpclient|default(False)) and item.upstream|default(False) == False'
+  loop: "{{lr.lans}}"
+
+- name: Generate address lists
+  set_fact:
+    lr_lansubnets: "{{ lr_lansubnets | default([]) + [ item.address ~ '/' ~ item.prefix ] }}"
+  when: 'item.state == "present" and "address" in item and "prefix" in item'
+  loop: "{{lr.lans}}"
+
+- name: Generate upstream interface lists
+  set_fact:
+    lr_upstreaminterfacenames: "{{ lr_upstreaminterfacenames | default([]) + [ item.name ] }}"
+  when: 'item.state == "present" and item.upstream|default(False) == True'
+  loop: "{{lr.lans}}"
+
+- name: Fail when no upstream found
+  fail:
+    msg: 'No upstream interface found'
+  when: 'lr_upstreaminterfacenames|length < 1'

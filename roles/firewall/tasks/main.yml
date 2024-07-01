@@ -1,0 +1,27 @@
+---
+# brickburg/linuxrouter/roles/firewall/tasks/main.yml
+
+- name: Uninstall iptables
+  apt:
+    force_apt_get: yes
+    name:
+      - iptables
+      - iptables-persistent
+
+- name: Install nftables
+  include_role:
+    name: brickburg.linuxrouter.nftablesinstall
+
+- name: Install nftables config folder
+  include_role:
+    name: brickburg.linuxrouter.nftablesfolder
+
+- name: netfilter ruleset
+  template:
+    src: files/rules.nft.j2
+    dest: /etc/nftables.d/rules.nft
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  notify:
+    - 'Restart netfilter'

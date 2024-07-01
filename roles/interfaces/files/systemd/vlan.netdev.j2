@@ -1,0 +1,12 @@
+# This file is managed by Ansible
+# The file defines a VLAN on a network interface
+
+[NetDev]
+Name={{item.interface}}.{{item.vid}}
+Description={{item.description}}
+Kind=vlan
+
+[VLAN]
+Id={{item.vid}}
+
+# eof

@@ -1,0 +1,17 @@
+---
+# brickburg/linuxrouter/roles/webservices/handlers/main.yml
+
+- name: 'Restart munin-node'
+  systemd:
+    name: munin-node
+    state: restarted
+
+- name: 'Restart munin'
+  systemd:
+    name: munin
+    state: restarted
+
+- name: 'Restart nginx'
+  systemd:
+    name: nginx
+    state: restarted

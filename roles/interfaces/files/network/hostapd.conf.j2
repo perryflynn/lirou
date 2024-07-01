@@ -1,0 +1,26 @@
+# This file is managed by Ansible
+# it configures a wireless access point with hostapd
+
+interface={{item.name}}
+driver={{lr.wifi.driver}}
+ssid={{item.ssid}}
+
+hw_mode=a
+ieee80211n=1
+require_ht=1
+ieee80211ac=1
+require_vht=1
+channel={{lr.wifi.channel}}
+country_code={{lr.wifi.country}}
+
+macaddr_acl=0
+ignore_broadcast_ssid=0
+
+auth_algs=1
+wpa=3
+wpa_passphrase={{item.passphrase}}
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+
+# eof

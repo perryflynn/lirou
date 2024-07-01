@@ -1,0 +1,81 @@
+---
+# brickburg/linuxrouter/roles/interfaceevents/tasks/main.yml
+
+- name: Install packages
+  apt:
+    force_apt_get: yes
+    name:
+      - networkd-dispatcher
+      - bind9-dnsutils
+
+- name: Enable networkd-dispatcher
+  systemd:
+    name: networkd-dispatcher
+    enabled: true
+    masked: false
+    state: started
+
+- name: dispatcher debug log script
+  template:
+    src: files/dispatcher-log.sh.j2
+    dest: /etc/networkd-dispatcher/{{item}}/dispatcher-log.sh
+    owner: root
+    group: root
+    mode: u=rwx,go=rx
+  when: 'lr.networkeventlog'
+  loop:
+    - carrier.d
+    - degraded.d
+    - dormant.d
+    - no-carrier.d
+    - off.d
+    - routable.d
+
+- name: Cleanup dispatcher debug log script
+  file:
+    path: /etc/networkd-dispatcher/{{item}}/dispatcher-log.sh
+    state: absent
+  when: 'not lr.networkeventlog'
+  loop:
+    - carrier.d
+    - degraded.d
+    - dormant.d
+    - no-carrier.d
+    - off.d
+    - routable.d
+
+- name: Create ddns nsupdate keyfile
+  copy:
+    dest: "/etc/nsupdate-ddns-{{item.name}}.key"
+    owner: root
+    group: root
+    mode: u=rw,go=-
+    content: "{{item.properties.keyfile}}"
+  when: 'item.state == "present" and item.provider == "nsupdate"'
+  loop: "{{lr.ddns}}"
+
+- name: Delete obsolete ddns nsupdate keyfile
+  file:
+    path: "/etc/nsupdate-ddns-{{item.name}}.key"
+    state: absent
+  when: 'item.state == "absent" and item.provider == "nsupdate"'
+  loop: "{{lr.ddns}}"
+
+- name: Create ddns nsupdate hook
+  template:
+    src: files/ddns-client-nsupdate.sh.j2
+    dest: /etc/networkd-dispatcher/routable.d/ddns-{{item.name}}.sh
+    owner: root
+    group: root
+    mode: u=rwx,go=-
+  vars:
+    ddnsitem: "{{item}}"
+  when: 'item.state == "present" and item.provider == "nsupdate"'
+  loop: "{{lr.ddns}}"
+
+- name: Delete obsolete ddns nsupdate hook
+  file:
+    path: /etc/networkd-dispatcher/routable.d/ddns-{{item.name}}.sh
+    state: absent
+  when: 'item.state == "absent" and item.provider == "nsupdate"'
+  loop: "{{lr.ddns}}"
