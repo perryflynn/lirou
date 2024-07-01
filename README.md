@@ -6,6 +6,10 @@ Router based on good ol' classic Debian Stable.
 
 ⬜ = open; 🟨 = wip; ✅ = done
 
+Architecture:
+
+- ✅ Copy + Execute Ansible on the router (it's getting stuck on IP changes right now)
+
 OS:
 
 - ✅ Install packages
@@ -48,6 +52,7 @@ Services:
 
 TODO:
 
+- ⬜ https://wiki.ubuntuusers.de/overlayroot/
 - ⬜ NTP
 - ⬜ DHCP -> nsupdate for leases
 - ⬜ VDSL
@@ -56,22 +61,9 @@ TODO:
 - ⬜ Fancy config for Firewall rules
 - ⬜ Fancy configs for Port forwarding
 - ⬜ Check_MK Monitoring
-- ⬜ Copy + Execute Ansible on the router (it's getting stuck on IP changes right now)
 - ⬜ IPv6
 
 ## Open Issues
-
-### Move Playbook Code into Roles
-
-- ✅ Validate and generate parameters
-- ✅ OS config (hostname, kernel flags, users, sshd)
-- ✅ Software (Packages and Config Files)
-- ✅ Interfaces
-- ✅ Event Dispatcher
-- ⬜ DHCP
-- ⬜ Firewall
-- ⬜ Webserver
-- ⬜ Munin
 
 ### ath10k does not change country code
 
