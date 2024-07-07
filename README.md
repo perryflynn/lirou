@@ -2,7 +2,14 @@
 
 > *SaaR - systemd as a Router*
 
-Router based on good ol' classic Debian Stable.
+Router based on good ol' classic Debian Stable, but with systemd as network- and service management.
+
+## Current State
+
+Interfaces, WAN Interface / SNAT / Masquerade, DHCP/DNS, Wifi and Routing works, 
+Firewall just one static ruleset. Basic support for DNAT.
+
+The project in generall is a work-in-progress.
 
 ## Features
 
@@ -88,3 +95,11 @@ linuxrouter:
 - Deploy ansible, code and config to the router: `ansible-playbook -i your/inventory brickburg.linuxrouter.deploy --limit linuxrouter`
 - Login to the router as root
 - Execute `lirou-apply.sh`
+
+## Credits
+
+This code was created by Christian Blechert <[christian@serverless.industries](mailto:christian@serverless.industries)>.
+
+## License
+
+This code is published under [GPL v3](./LICENSE.txt).
