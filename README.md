@@ -9,7 +9,7 @@ Router based on good ol' classic Debian Stable, but with systemd as network- and
 Interfaces, WAN Interface / SNAT / Masquerade, DHCP/DNS, Wifi and Routing works, 
 Firewall just one static ruleset. Basic support for DNAT.
 
-The project in generall is a work-in-progress.
+The project in general, is a work-in-progress.
 
 ## Features
 
