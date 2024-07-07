@@ -17,6 +17,7 @@
       - htop
       - lm-sensors
       - smartmontools
+      - screen
 
 - name: Uninstall packages
   apt:
