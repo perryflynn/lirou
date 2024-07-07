@@ -45,4 +45,12 @@ Label={{ip.name}}
 
 {% endfor %}
 
+{% for route in item.routes|default([]) %}
+[Route]
+#Description={{route.description}}
+Destination={{route.destination}}
+Gateway={{route.gateway}}
+
+{% endfor %}
+
 # eof
