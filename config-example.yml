@@ -1,0 +1,156 @@
+lr:
+  hostname: linux-router
+  description: Test Router
+  admin: John Wick
+  contact: john@example.com
+
+  # behaviour
+  forcehandlers: false
+  networkeventlog: false
+
+  # system authentication
+  root_password: '$y$j9T$1XcFzb1B2fwtWLz2IIs.y1$UTBXioh2oV.3PctE7vSWVBzkhci0Jsp2NEzQ6JNf2H5'
+  root_keys:
+    - key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOV1xAo4NOKpc4y0wcr3NqgVNMdMkxeD2UzVK0SAVuvt
+      comment: mykey
+
+  # primary system IP
+  primary_address: '172.23.24.254'
+
+  # dynamic dns via nsupdate
+  ddns:
+    - name: lr
+      state: present
+      provider: nsupdate
+      interface: enp1s0
+      properties:
+        server: ns.example.com
+        domain: lr.example.com
+        keyfile: XXXXXXXXXXXXXXXXX
+
+  # wireless LAN interfaces
+  wifi:
+    enabled: true
+    name: wlp5s0
+    country: DE
+    channel: 36
+    phyname: phy0
+    mac: 04:f0:21:a8:84:20
+    driver: nl80211
+    software:
+
+      # WAN DHCP upstream via wifi
+      - name: wlp5s0
+        state: present
+        mode: station
+        mac: 04:f0:21:a8:84:20
+        ssid: UpstreamWifi
+        passphrase: XXXXXXXXXXXXXXXXXX
+
+      # Wifi Access Point
+      - name: wlan_access
+        description: Access Wifi
+        state: present
+        # https://www.freedesktop.org/software/systemd/man/systemd.netdev.html#%5BWLAN%5D%20Section%20Options
+        mode: ap
+        mac: 04:f0:21:a8:84:22
+        ssid: Access_Wifi
+        passphrase: XXXXXXXXXXXXX
+
+  lans:
+
+    # Wifi Interface
+    - name: wlp5s0
+      description: Wifi Client
+      state: present
+      dhcpclient: true
+      pull_gateway: true
+      pull_routes: true
+      upstream: true
+      additionalips:
+        - name: proxmox
+          address: '192.168.42.231'
+          netmask: 24
+
+    # First LAN Interface
+    - name: enp1s0
+      description: WAN
+      state: present
+      dhcpclient: true
+      pull_gateway: true
+      pull_routes: true
+      upstream: false
+
+    # Second LAN Interface
+    - name: enp2s0
+      description: Admin
+      state: present
+
+    # Third LAN Interface
+    - name: enp3s0
+      description: Mixed
+      state: present
+
+    - name: enp3s0.25
+      description: Clients on Mixed
+      state: present
+      vlan: true
+      vid: 25
+      interface: enp3s0
+
+    # Fourth LAN Interface
+    - name: enp4s0
+      description: VLAN-only
+      state: present
+
+    - name: enp4s0.24
+      description: Management on VLAN-only
+      state: present
+      vlan: true
+      vid: 24
+      interface: enp4s0
+
+    - name: enp4s0.25
+      description: Clients on VLAN-only
+      state: present
+      vlan: true
+      vid: 25
+      interface: enp4s0
+
+    # Wifi AP Interface
+    - name: wlan_access
+      description: Client WLAN
+      state: present
+
+    # Admin Bridge
+    - name: lanbr24
+      description: Management
+      state: present
+      bridge: true
+      address: '172.23.24.254'
+      prefix: 24
+      dhcp:
+        start: '172.23.24.100'
+        end: '172.23.24.199'
+        lease: '24h'
+      interfaces: [ enp2s0, enp3s0, enp4s0.24 ]
+
+    # Clients Bridge
+    - name: lanbr25
+      description: Clients
+      state: present
+      bridge: true
+      address: '172.23.25.254'
+      prefix: 24
+      dhcp:
+        start: '172.23.25.100'
+        end: '172.23.25.199'
+        lease: '24h'
+      interfaces: [ enp3s0.25, enp4s0.25, wlan_access ]
+
+  dnat:
+    - src:
+        intf: enp1s0
+        addr: '192.168.42.231'
+      dest:
+        addr: '172.23.28.10'
