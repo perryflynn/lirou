@@ -80,9 +80,11 @@ TODO:
 
 - Get a router board
 - Install Debian stable or testing on it
-- Download this collection
+- Download this collection into your Ansible environment 
+  (something like `collections/ansible_collections/brickburg/linuxrouter`)
+- Ensure the `collections_paths` config parameter in your `ansible.cfg`
 - Create a [config file](./config-example.yml)
-- Add the router board to your inventory:
+- Add the router board to your Ansible inventory:
 
 ```yml
 linuxrouter:
