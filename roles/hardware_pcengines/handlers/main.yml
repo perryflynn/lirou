@@ -1,0 +1,5 @@
+---
+# brickburg/linuxrouter/roles/hardware_pcengines/handlers/main.yml
+
+- name: Configure grub
+  shell: update-grub

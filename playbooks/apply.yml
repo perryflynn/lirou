@@ -19,6 +19,12 @@
         name: brickburg.linuxrouter.osconfig
         apply: { tags: [ system ] }
 
+    - name: Configure PC Engines APU Board
+      include_role:
+        name: brickburg.linuxrouter.hardware_pcengines
+        apply: { tags: [ system ] }
+      when: "ansible_board_vendor == 'PC Engines'"
+
     - name: Install Software
       include_role:
         name: brickburg.linuxrouter.software

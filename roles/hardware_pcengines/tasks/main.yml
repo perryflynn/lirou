@@ -1,0 +1,21 @@
+---
+# brickburg/linuxrouter/roles/hardware_pcengines/tasks/main.yml
+
+- name: Ensure parameters
+  assert:
+    that:
+      - ansible_board_vendor == 'PC Engines'
+
+- name: Install software
+  apt:
+    force_apt_get: yes
+    name:
+      - flashrom
+
+- name: Enable serial console
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    regexp: 'GRUB_CMDLINE_LINUX_DEFAULT="'
+    line: "GRUB_CMDLINE_LINUX_DEFAULT=\"console=tty0 console=ttyS0,115200n8\""
+  notify:
+    - Configure grub
