@@ -59,6 +59,10 @@ Services:
 
 - ✅ DynDNS via nsupdate
 
+Hardware:
+
+- ✅ PCEngines: Serial Console + `flashrom`
+
 TODO:
 
 - ⬜ https://wiki.ubuntuusers.de/overlayroot/
