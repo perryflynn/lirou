@@ -1,0 +1,111 @@
+---
+# roles/selfsignedcert/tasks/main.yml
+
+- name: Install python dependencies
+  apt:
+    force_apt_get: yes
+    name:
+      - python3-cryptography
+
+- name: Create private key for CA certificate
+  community.crypto.openssl_privatekey:
+    path: "{{selfsigned_cakeypath}}"
+    type: RSA
+    size: 4096
+    owner: root
+    group: root
+    mode: u=rw,go=-
+
+- name: Create certificate signing request (CSR) for CA certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{selfsigned_cakeypath}}"
+    country_name: DE
+    locality_name: Lower Saxony
+    organization_name: IAC
+    organizational_unit_name: Perrys Ansible Apply CA
+    common_name: Perrys Ansible Apply CA
+    email_address: no-reply@example.com
+    use_common_name_for_san: false
+    basic_constraints:
+      - 'CA:TRUE'
+    basic_constraints_critical: true
+    key_usage:
+      - keyCertSign
+    key_usage_critical: true
+  register: ca_csr
+
+- name: Create self-signed CA certificate from CSR
+  community.crypto.x509_certificate:
+    path: "{{selfsigned_cacertpath}}"
+    csr_content: "{{ca_csr.csr}}"
+    privatekey_path: "{{selfsigned_cakeypath}}"
+    provider: selfsigned
+    selfsigned_not_after: "+3650d"
+    selfsigned_not_before: "-1d"
+    owner: root
+    group: root
+    mode: u=rw,go=r
+
+- name: Create private key for self-signed certificate
+  community.crypto.openssl_privatekey:
+    path: "{{selfsigned_keypath}}"
+    type: RSA
+    size: 4096
+    owner: root
+    group: root
+    mode: u=rw,go=-
+
+- name: Create SAN list
+  set_fact:
+    newsanlist: "{{ ([selfsigned_name]+selfsigned_names) | map('regex_replace', '^', 'DNS:') }}"
+
+- name: Create CSR for self-signed certificate
+  community.crypto.openssl_csr_pipe:
+    privatekey_path: "{{selfsigned_keypath}}"
+    subject_alt_name: "{{newsanlist}}"
+    common_name: "{{selfsigned_name}}"
+    country_name: DE
+    locality_name: Lower Saxony
+    organization_name: IAC
+    organizational_unit_name: Perrys Ansible Router
+    email_address: no-reply@example.com
+  register: csr
+
+- name: Sign certificate with CA
+  community.crypto.x509_certificate_pipe:
+    csr_content: "{{csr.csr}}"
+    provider: ownca
+    ownca_path: "{{selfsigned_cacertpath}}"
+    ownca_privatekey_path: "{{selfsigned_cakeypath}}"
+    ownca_not_after: +3600d
+    ownca_not_before: "-12h"
+  register: certificate
+
+- name: Write certificate file
+  copy:
+    dest: "{{selfsigned_certpath}}"
+    content: "{{certificate.certificate}}"
+    owner: root
+    group: root
+    mode: u=rw,go=r
+
+- name: Copy CA into trust store for Debian/Ubuntu systems
+  copy:
+    remote_src: true
+    src: "{{selfsigned_cacertpath}}"
+    dest: "/usr/local/share/ca-certificates/{{selfsigned_cacertpath|basename}}"
+    owner: root
+    group: root
+    mode: u=rw,go=r
+
+- name: Regenerate trust store for Debian/Ubuntu systems
+  shell:
+    chdir: /
+    executable: /bin/bash
+    cmd: |
+      update-ca-certificates
+
+- name: Generate a 2048 bit dhparam
+  community.crypto.openssl_dhparam:
+    path: "{{selfsigned_dhparampath}}"
+    size: 2048

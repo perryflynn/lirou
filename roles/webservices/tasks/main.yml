@@ -18,6 +18,20 @@
     - Restart munin-node
     - Restart munin
 
+- name: Ensure self-signed CA
+  include_role:
+    name: brickburg.linuxrouter.selfsignedcert
+
+- name: Webserver configuration
+  template:
+    src: files/default.conf.j2
+    dest: /etc/nginx/sites-available/default
+    owner: root
+    group: root
+    mode: u=rw,g=r
+  notify:
+    - Restart nginx
+
 - name: Symlink munin into nginx www-root
   file:
     src: /var/cache/munin/www

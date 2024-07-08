@@ -1,0 +1,14 @@
+---
+# roles/selfsignedcert/defaults/main.yml
+
+selfsigned_cacertpath: /etc/ssl/private/localhost-ca.crt
+selfsigned_cakeypath: /etc/ssl/private/localhost-ca.key
+selfsigned_certpath: /etc/ssl/private/localhost-selfsigned.crt
+selfsigned_keypath: /etc/ssl/private/localhost-selfsigned.key
+selfsigned_dhparampath: /etc/ssl/dhparam-2048
+
+selfsigned_name: lirou.localdomain
+selfsigned_names:
+  - '*.lirou.localdomain'
+  - 'lirou'
+  - '*.lirou'
