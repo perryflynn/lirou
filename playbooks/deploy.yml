@@ -15,6 +15,10 @@
         name:
           - rsync
           - ansible
+          - screen
+          - ca-certificates
+          - curl
+          - git
 
     - name: Ensure project folder structure
       file:
