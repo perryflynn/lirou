@@ -79,6 +79,8 @@ TODO:
 ## Open Issues
 
 - [ath10k does not change country code](./README-wifi.md)
+- No support for static default gateways
+- nftables sets always masquerade on default gateway
 
 ## Install
 
@@ -101,6 +103,19 @@ linuxrouter:
 - Deploy ansible, code and config to the router: `ansible-playbook -i your/inventory brickburg.linuxrouter.deploy --limit linuxrouter`
 - Login to the router as root
 - Execute `lirou-apply.sh`
+
+## Config Schema
+
+- Install the VSCode extension `redhat.vscode-yaml`
+- Configure schema:
+
+```json
+{
+    "yaml.schemas": {
+        "collections/ansible_collections/brickburg/linuxrouter/lirou-config-schema.json": "lirou-config-*.yml"
+    }
+}
+```
 
 ## Credits
 

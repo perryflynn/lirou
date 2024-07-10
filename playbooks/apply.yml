@@ -54,11 +54,3 @@
       include_role:
         name: brickburg.linuxrouter.webservices
         apply: { tags: [ services ] }
-
-    # - name: Force handlers
-    #   shell: 'true'
-    #   changed_when: 'True'
-    #   notify:
-    #     - all_handlers
-    #   when: 'lr.forcehandlers|default(False)'
-    #   tags: [ always ]
