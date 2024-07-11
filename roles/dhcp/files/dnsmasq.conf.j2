@@ -11,7 +11,7 @@ interface=lo
 listen-address=127.0.0.1
 
 {% for lan in lr.lans %}
-{% if lan.upstream|default(False) == False and 'dhcp' in lan %}
+{% if lan.upstream|default(False) == False and lan.dhcpd.enabled|default(False) == True %}
 # Interface '{{lan.name}}'
 interface={{lan.name}}
 listen-address={{lan.address}}

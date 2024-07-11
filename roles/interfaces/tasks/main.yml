@@ -34,6 +34,45 @@
     masked: false
     state: started
 
+- name: Default interfaces file
+  file:
+    path: /etc/network/interfaces
+    state: absent
+  notify:
+    - 'Reload networkd'
+
+- name: Interfaces directory
+  file:
+    path: /etc/network/interfaces.d
+    state: absent
+  notify:
+    - 'Reload networkd'
+
+# VLAN
+
+- name: VLAN interface via systemd
+  template:
+    src: files/systemd/vlan.netdev.j2
+    dest: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present"'
+  loop: "{{lr.lans | selectattr('kind', 'eq', 'vlan')}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Remove obsolete VLAN interface from systemd
+  file:
+    path: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
+    state: absent
+  when: 'item.state == "absent"'
+  loop: "{{lr.lans | selectattr('kind', 'eq', 'vlan')}}"
+  notify:
+    - 'Reload networkd'
+
+# Bridge
+
 - name: Bridge-Utils configuration enable hotplug
   lineinfile:
     path: /etc/default/bridge-utils
@@ -50,56 +89,6 @@
   notify:
     - 'Reload networkd'
 
-- name: Kernel module settings for cfg80211
-  template:
-    src: files/modprobe.d/cfg80211.conf.j2
-    dest: /etc/modprobe.d/cfg80211.conf
-    owner: root
-    group: root
-    mode: u=rw,go=r
-  when: lr.wifi.enabled
-
-- name: Delete kernel module settings for cfg80211
-  file:
-    path: /etc/modprobe.d/cfg80211.conf
-    state: absent
-  when: not lr.wifi.enabled
-
-- name: Default interfaces file
-  file:
-    path: /etc/network/interfaces
-    state: absent
-  notify:
-    - 'Reload networkd'
-
-- name: Interfaces directory
-  file:
-    path: /etc/network/interfaces.d
-    state: absent
-  notify:
-    - 'Reload networkd'
-
-- name: VLAN interface via systemd
-  template:
-    src: files/systemd/vlan.netdev.j2
-    dest: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
-    owner: root
-    group: root
-    mode: u=rw,g=r,o=r
-  when: 'item.state == "present"'
-  loop: "{{lr.lans | selectattr('vlan', 'defined') | selectattr('vlan', 'eq', True)}}"
-  notify:
-    - 'Reload networkd'
-
-- name: Remove obsolete VLAN interface from systemd
-  file:
-    path: "/etc/systemd/network/vlan-{{item.interface}}.{{item.vid}}.netdev"
-    state: absent
-  when: 'item.state == "absent"'
-  loop: "{{lr.lans | selectattr('vlan', 'defined') | selectattr('vlan', 'eq', True)}}"
-  notify:
-    - 'Reload networkd'
-
 - name: Bridge interface via systemd
   template:
     src: files/systemd/bridge.netdev.j2
@@ -108,7 +97,7 @@
     group: root
     mode: u=rw,g=r,o=r
   when: 'item.state == "present"'
-  loop: "{{lr.lans | selectattr('bridge', 'defined') | selectattr('bridge', 'eq', True)}}"
+  loop: "{{lr.lans | selectattr('kind', 'eq', 'bridge')}}"
   notify:
     - 'Reload networkd'
 
@@ -117,9 +106,11 @@
     path: "/etc/systemd/network/bridge-{{item.name}}.netdev"
     state: absent
   when: 'item.state == "absent"'
-  loop: "{{lr.lans | selectattr('bridge', 'defined') | selectattr('bridge', 'eq', True)}}"
+  loop: "{{lr.lans | selectattr('kind', 'eq', 'bridge')}}"
   notify:
     - 'Reload networkd'
+
+# Classic interfaces
 
 - name: LAN interface via systemd
   template:
@@ -142,6 +133,23 @@
   notify:
     - 'Reload networkd'
 
+# Wifi
+
+- name: Kernel module settings for cfg80211
+  template:
+    src: files/modprobe.d/cfg80211.conf.j2
+    dest: /etc/modprobe.d/cfg80211.conf
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  when: lr.wifi.enabled|default(False)
+
+- name: Delete kernel module settings for cfg80211
+  file:
+    path: /etc/modprobe.d/cfg80211.conf
+    state: absent
+  when: not (lr.wifi.enabled|default(False))
+
 - name: Wifi interfaces via systemd
   template:
     src: files/systemd/wifi.netdev.j2
@@ -150,7 +158,7 @@
     group: root
     mode: u=rw,g=r,o=r
   when: 'item.state == "present" and lr.wifi.name != item.name'
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   notify:
     - 'Reload networkd'
 
@@ -159,7 +167,7 @@
     path: "/etc/systemd/network/{{item.name}}.netdev"
     state: absent
   when: 'item.state == "absent"'
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   notify:
     - 'Reload networkd'
 
@@ -171,7 +179,7 @@
     group: root
     mode: u=rw,g=r,o=
   when: 'item.mode == "station" and item.state == "present"'
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   notify:
     - Restart wpa_supplicant
 
@@ -180,7 +188,7 @@
     path: /etc/wpa_supplicant/wpa_supplicant-{{item.name}}.conf
     state: absent
   when: 'item.mode == "station" and item.state == "absent"'
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   notify:
     - Restart wpa_supplicant
 
@@ -189,7 +197,7 @@
     name: "wpa_supplicant@{{item.name}}"
     state: stopped
     enabled: false
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "station" and item.state == "absent"'
   notify:
     - Restart wpa_supplicant
@@ -198,7 +206,7 @@
   systemd:
     name: "wpa_supplicant@{{item.name}}"
     enabled: true
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "station" and item.state == "present"'
   notify:
     - Restart wpa_supplicant
@@ -229,7 +237,7 @@
     owner: root
     group: root
     mode: u=rw,g=r,o=
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "ap" and item.state == "present"'
   register: hostapds
   notify:
@@ -239,7 +247,7 @@
   file:
     path: /etc/hostapd/hostapd-{{item.name}}.conf
     state: absent
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "ap" and item.state == "absent"'
   notify:
     - Restart hostapd
@@ -249,7 +257,7 @@
     name: "hostapd-lr@{{item.name}}"
     state: stopped
     enabled: false
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "ap" and item.state == "absent"'
   notify:
     - Restart hostapd
@@ -258,7 +266,7 @@
   systemd:
     name: "hostapd-lr@{{item.name}}"
     enabled: true
-  loop: "{{lr.wifi.software}}"
+  loop: "{{lr.wifi.software|default([])}}"
   when: 'item.mode == "ap" and item.state == "present"'
   notify:
     - Restart hostapd

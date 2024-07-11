@@ -7,7 +7,7 @@ Name={{item.name}}
 [Network]
 Description={{item.description}}
 LinkLocalAddressing=no
-{% if item.dhcpclient|default(False) == True %}
+{% if item.dhcpclient.enabled|default(False) == True %}
 DHCP=ipv4
 {% else %}
 {% if item.upstream|default(False) == True %}
@@ -22,20 +22,20 @@ Address={{item.address}}/{{item.prefix}}
 # NTP= use multiple for more than one ntp
 {% endif %}
 
-{% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('bridge', 'defined') | selectattr('bridge', 'eq', True) | selectattr('interfaces', 'contains', item.name) %}
+{% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'bridge') | selectattr('bridge.interfaces', 'contains', item.name) %}
 {% if bridges|length == 1 %}
 Bridge={{bridges[0].name}}
 {% endif %}
 
-{% set vlans = lr.lans | selectattr('state', 'eq', 'present') | selectattr('vlan', 'defined') | selectattr('vlan', 'eq', True) | selectattr('interface', 'defined') | selectattr('interface', 'eq', item.name) %}
+{% set vlans = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'vlan') | selectattr('vlan.interface', 'eq', item.name) %}
 {% for vlan in vlans %}
 VLAN={{vlan.name}}
 {% endfor %}
 
-{% if item.dhcpclient|default(False) == True %}
+{% if item.dhcpclient.enabled|default(False) == True %}
 [DHCPv4]
-UseRoutes={{'true' if item.pull_routes|default(False) else 'false'}}
-UseGateway={{'true' if item.pull_gateway|default(False) else 'false'}}
+UseRoutes={{'true' if item.dhcpclient.pull_routes|default(False) else 'false'}}
+UseGateway={{'true' if item.dhcpclient.pull_gateway|default(False) else 'false'}}
 {% endif %}
 
 {% for ip in item.additionalips|default([]) %}

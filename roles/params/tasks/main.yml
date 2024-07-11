@@ -4,7 +4,7 @@
 - name: Generate interface lists (static)
   set_fact:
     lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item.name ] }}"
-  when: 'item.state == "present" and ("address" in item or item.dhcpclient|default(False)) and item.upstream|default(False) == False'
+  when: 'item.state == "present" and ("address" in item or item.dhcpclient.enabled|default(False)) and item.upstream|default(False) == False'
   loop: "{{lr.lans}}"
 
 - name: Generate address lists

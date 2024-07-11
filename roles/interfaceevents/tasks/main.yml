@@ -52,14 +52,14 @@
     mode: u=rw,go=-
     content: "{{item.properties.keyfile}}"
   when: 'item.state == "present" and item.provider == "nsupdate"'
-  loop: "{{lr.ddns}}"
+  loop: "{{lr.ddns|default([])}}"
 
 - name: Delete obsolete ddns nsupdate keyfile
   file:
     path: "/etc/nsupdate-ddns-{{item.name}}.key"
     state: absent
   when: 'item.state == "absent" and item.provider == "nsupdate"'
-  loop: "{{lr.ddns}}"
+  loop: "{{lr.ddns|default([])}}"
 
 - name: Create ddns nsupdate hook
   template:
@@ -71,11 +71,11 @@
   vars:
     ddnsitem: "{{item}}"
   when: 'item.state == "present" and item.provider == "nsupdate"'
-  loop: "{{lr.ddns}}"
+  loop: "{{lr.ddns|default([])}}"
 
 - name: Delete obsolete ddns nsupdate hook
   file:
     path: /etc/networkd-dispatcher/routable.d/ddns-{{item.name}}.sh
     state: absent
   when: 'item.state == "absent" and item.provider == "nsupdate"'
-  loop: "{{lr.ddns}}"
+  loop: "{{lr.ddns|default([])}}"
