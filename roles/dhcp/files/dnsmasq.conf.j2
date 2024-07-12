@@ -16,7 +16,7 @@ listen-address=127.0.0.1
 interface={{lan.name}}
 listen-address={{lan.address}}
 
-dhcp-range=interface:{{lan.name}},{{lan.dhcp.start}},{{lan.dhcp.end}},{{lan.dhcp.lease}}
+dhcp-range=interface:{{lan.name}},{{lan.dhcpd.start}},{{lan.dhcpd.end}},{{lan.dhcpd.lease}}
 dhcp-option=interface:{{lan.name}},option:domain-search,home.arpa
 
 {% endif %}
