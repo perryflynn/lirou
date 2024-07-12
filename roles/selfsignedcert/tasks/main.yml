@@ -17,7 +17,8 @@
     mode: u=rw,go=-
 
 - name: Create certificate signing request (CSR) for CA certificate
-  community.crypto.openssl_csr_pipe:
+  community.crypto.openssl_csr:
+    path: "{{selfsigned_cacsrpath}}"
     privatekey_path: "{{selfsigned_cakeypath}}"
     country_name: DE
     locality_name: Lower Saxony
@@ -32,12 +33,15 @@
     key_usage:
       - keyCertSign
     key_usage_critical: true
+    owner: root
+    group: root
+    mode: u=rw,go=-
   register: ca_csr
 
 - name: Create self-signed CA certificate from CSR
   community.crypto.x509_certificate:
     path: "{{selfsigned_cacertpath}}"
-    csr_content: "{{ca_csr.csr}}"
+    csr_path: "{{selfsigned_cacsrpath}}"
     privatekey_path: "{{selfsigned_cakeypath}}"
     provider: selfsigned
     selfsigned_not_after: "+3650d"
@@ -60,7 +64,8 @@
     newsanlist: "{{ ([selfsigned_name]+selfsigned_names) | map('regex_replace', '^', 'DNS:') }}"
 
 - name: Create CSR for self-signed certificate
-  community.crypto.openssl_csr_pipe:
+  community.crypto.openssl_csr:
+    path: "{{selfsigned_certcsrpath}}"
     privatekey_path: "{{selfsigned_keypath}}"
     subject_alt_name: "{{newsanlist}}"
     common_name: "{{selfsigned_name}}"
@@ -69,25 +74,24 @@
     organization_name: IAC
     organizational_unit_name: Perrys Ansible Router
     email_address: no-reply@example.com
+    owner: root
+    group: root
+    mode: u=rw,go=-
   register: csr
 
 - name: Sign certificate with CA
-  community.crypto.x509_certificate_pipe:
-    csr_content: "{{csr.csr}}"
+  community.crypto.x509_certificate:
+    path: "{{selfsigned_certpath}}"
+    csr_path: "{{selfsigned_certcsrpath}}"
     provider: ownca
     ownca_path: "{{selfsigned_cacertpath}}"
     ownca_privatekey_path: "{{selfsigned_cakeypath}}"
     ownca_not_after: +3600d
     ownca_not_before: "-12h"
-  register: certificate
-
-- name: Write certificate file
-  copy:
-    dest: "{{selfsigned_certpath}}"
-    content: "{{certificate.certificate}}"
     owner: root
     group: root
     mode: u=rw,go=r
+  register: certificate
 
 - name: Copy CA into trust store for Debian/Ubuntu systems
   copy:
@@ -97,6 +101,7 @@
     owner: root
     group: root
     mode: u=rw,go=r
+  register: cacopy
 
 - name: Regenerate trust store for Debian/Ubuntu systems
   shell:
@@ -104,6 +109,7 @@
     executable: /bin/bash
     cmd: |
       update-ca-certificates
+  when: cacopy.changed
 
 - name: Generate a 2048 bit dhparam
   community.crypto.openssl_dhparam:
