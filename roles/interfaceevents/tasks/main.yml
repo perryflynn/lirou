@@ -13,7 +13,6 @@
     name: networkd-dispatcher
     enabled: true
     masked: false
-    state: started
 
 - name: dispatcher debug log script
   template:
@@ -30,6 +29,8 @@
     - no-carrier.d
     - off.d
     - routable.d
+  notify:
+    - Restart dispatcher
 
 - name: Cleanup dispatcher debug log script
   file:
@@ -43,6 +44,8 @@
     - no-carrier.d
     - off.d
     - routable.d
+  notify:
+    - Restart dispatcher
 
 - name: Create ddns nsupdate keyfile
   copy:
@@ -72,6 +75,8 @@
     ddnsitem: "{{item}}"
   when: 'item.state == "present" and item.provider == "nsupdate"'
   loop: "{{lr.ddns|default([])}}"
+  notify:
+    - Restart dispatcher
 
 - name: Delete obsolete ddns nsupdate hook
   file:
@@ -79,3 +84,5 @@
     state: absent
   when: 'item.state == "absent" and item.provider == "nsupdate"'
   loop: "{{lr.ddns|default([])}}"
+  notify:
+    - Restart dispatcher
