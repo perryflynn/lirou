@@ -18,6 +18,29 @@
     - Restart munin-node
     - Restart munin
 
+- name: Ensure interface monitoring
+  file:
+    src: "/usr/share/munin/plugins/{{item.1}}"
+    dest: "/etc/munin/plugins/{{item.1}}{{item.0.name}}"
+    owner: root
+    group: root
+    state: "{{'link' if item.0.state == 'present' else 'absent'}}"
+  loop: "{{lr.lans | product([ 'if_', 'if_err_' ]) | list}}"
+  notify:
+    - Restart munin-node
+    - Restart munin
+
+- name: Munin configuration
+  template:
+    src: files/munin.conf.j2
+    dest: /etc/munin/munin.conf
+    owner: root
+    group: root
+    mode: u=rw,g=r
+  notify:
+    - Restart munin-node
+    - Restart munin
+
 - name: Ensure self-signed CA
   include_role:
     name: brickburg.linuxrouter.selfsignedcert
