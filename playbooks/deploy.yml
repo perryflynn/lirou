@@ -7,6 +7,18 @@
     lirou_etcdir: /etc/lirou
     lirou_collectiondir: "{{(playbook_dir + '/..') | realpath}}"
 
+  handlers:
+    - name: Update timestamp
+      copy:
+        dest: "/etc/ansible/facts.d/lirou_status.fact"
+        owner: root
+        group: root
+        mode: u=rw,go=r
+        content: |
+          {
+              "last_update": "{{ansible_date_time.iso8601}}"
+          }
+
   tasks:
 
     - name: Install packages
@@ -40,6 +52,8 @@
         owner: root
         group: root
         mode: u=rw,go-
+      notify:
+        - Update timestamp
 
     - name: Create ansible.cfg
       copy:
@@ -78,6 +92,14 @@
         mode: u=rwx,go=-
         state: directory
 
+    - name: Create ansible local facts dir
+      file:
+        path: /etc/ansible/facts.d
+        owner: root
+        group: root
+        mode: u=rwx,go=-
+        state: directory
+
     - name: Symlink ansible.cfg to ansible config dir
       file:
         src: "{{lirou_basedir}}/ansible.cfg"
@@ -111,6 +133,8 @@
         times: true
       loop:
         - { s: "{{lirou_collectiondir}}/", d: "{{lirou_basedir}}/collections/ansible_collections/brickburg/linuxrouter/" }
+      notify:
+        - Update timestamp
 
     - name: Create start script
       copy:

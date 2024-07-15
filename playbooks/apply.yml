@@ -28,7 +28,7 @@
     - name: Install Software
       include_role:
         name: brickburg.linuxrouter.software
-        apply: { tags: [ system ] }
+        apply: { tags: [ system, software ] }
 
     - name: Setup Interfaces
       include_role:
@@ -38,12 +38,12 @@
     - name: Setup Interface Events
       include_role:
         name: brickburg.linuxrouter.interfaceevents
-        apply: { tags: [ interfaces ] }
+        apply: { tags: [ interfaces, events ] }
 
     - name: Setup DHCP
       include_role:
         name: brickburg.linuxrouter.dhcp
-        apply: { tags: [ interfaces ] }
+        apply: { tags: [ interfaces, services, dhcp ] }
 
     - name: Setup Firewall
       include_role:
@@ -53,4 +53,4 @@
     - name: Setup webservices
       include_role:
         name: brickburg.linuxrouter.webservices
-        apply: { tags: [ services ] }
+        apply: { tags: [ services, webservices ] }
