@@ -9,6 +9,20 @@
       - munin-node
       - nginx-light
 
+- name: Enable services
+  systemd_service:
+    name: "{{item}}"
+    enabled: true
+    masked: false
+  loop:
+    - munin
+    - munin-node
+    - nginx
+  notify:
+    - Restart munin-node
+    - Restart munin
+    - Restart nginx
+
 - name: Bind munin-node to localhost
   lineinfile:
     path: /etc/munin/munin-node.conf
