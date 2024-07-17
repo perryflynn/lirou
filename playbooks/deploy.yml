@@ -145,5 +145,20 @@
         content: |
           #!/bin/bash
 
+          tmp_file=/tmp/lirou-apply-running
+          extra_args=()
+
+          if [ -f "$tmp_file" ]; then
+              >&2 echo "Looks like the last apply run was interrupted, force all handlers"
+              extra_args+=( --force-handlers )
+          fi
+
+          echo -n "$(date);$(id -u -n)" > $tmp_file
+
           export PYTHONUNBUFFERED=1
-          ansible-playbook brickburg.linuxrouter.apply
+          ansible-playbook brickburg.linuxrouter.apply "${extra_args[@]}" "$@"
+
+          result=$?
+          if [ $result -eq 0 ]; then
+              rm -f "$tmp_file"
+          fi
