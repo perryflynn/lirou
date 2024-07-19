@@ -9,6 +9,18 @@
   shell:
     cmd: 'networkctl reload'
 
+- name: 'Restart timesyncd'
+  systemd_service:
+    name: systemd-timesyncd
+    state: restarted
+  listen: [ 'Reload networkd' ]
+
+- name: 'Restart resolved'
+  systemd_service:
+    name: systemd-resolved
+    state: restarted
+  listen: [ 'Reload networkd' ]
+
 - name: 'Restart wpa_supplicant'
   shell:
     cmd: 'systemctl restart --all "wpa_supplicant@*.service"'

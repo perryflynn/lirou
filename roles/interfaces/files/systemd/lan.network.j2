@@ -7,19 +7,38 @@ Name={{item.name}}
 [Network]
 Description={{item.description}}
 LinkLocalAddressing=no
+
+{% if item.upstream|default(False) == True or 'gateway' in item %}
+LLMNR=false
+DNSOverTLS=false
+DNSSEC=false
+MulticastDNS=false
+{% endif %}
+
 {% if item.dhcpclient.enabled|default(False) == True %}
 DHCP=ipv4
 {% else %}
-{% if item.upstream|default(False) == True %}
-DefaultRouteOnDevice=true
-{% endif %}
+
 {% if 'address' in item and 'prefix' in item %}
 Address={{item.address}}/{{item.prefix}}
 {% endif %}
-# Gateway=
-# Domain= whitespace separated search domains
-# DNS= use multiple for more than one dns
-# NTP= use multiple for more than one ntp
+
+{% if 'gateway' in item %}
+Gateway={{item.gateway}}
+{% endif %}
+
+{% for dns in item.dnsservers|default([]) %}
+DNS={{dns}}
+{% endfor %}
+
+{% for ntp in item.ntpservers|default([]) %}
+NTP={{ntp}}
+{% endfor %}
+
+{% if item.domains | default([]) | length > 0 %}
+Domains={{item.domains|join(' ')}}
+{% endif %}
+
 {% endif %}
 
 {% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'bridge') | selectattr('bridge.interfaces', 'contains', item.name) %}
@@ -36,6 +55,7 @@ VLAN={{vlan.name}}
 [DHCPv4]
 UseRoutes={{'true' if item.dhcpclient.pull_routes|default(False) else 'false'}}
 UseGateway={{'true' if item.dhcpclient.pull_gateway|default(False) else 'false'}}
+UseDomains={{'true' if item.dhcpclient.pull_domains|default(False) else 'false'}}
 {% endif %}
 
 {% for ip in item.additionalips|default([]) %}

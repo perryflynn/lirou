@@ -165,18 +165,32 @@
                                 "properties": {
                                     "enabled": { "type": "boolean" },
                                     "pull_gateway": { "type": "boolean" },
-                                    "pull_routes": { "type": "boolean" }
+                                    "pull_routes": { "type": "boolean" },
+                                    "pull_domains": { "type": "boolean" }
                                 },
                                 "allOf": [
                                     {
                                         "if": { "properties": { "enabled": { "const": true } } },
-                                        "then": { "required": [ "pull_gateway", "pull_routes" ] }
+                                        "then": { "required": [ "pull_gateway", "pull_routes", "pull_domains" ] }
                                     }
                                 ]
                             },
 
                             "address": { "$ref": "#/definitions/ip-address" },
                             "prefix": { "$ref": "#/definitions/cidr" },
+                            "gateway": { "$ref": "#/definitions/ip-address" },
+                            "dnsservers": {
+                                "type": "array",
+                                "items": { "$ref": "#/definitions/ip-address" }
+                            },
+                            "ntpservers": {
+                                "type": "array",
+                                "items": { "$ref": "#/definitions/ip-address" }
+                            },
+                            "domains": {
+                                "type": "array",
+                                "items": { "type": "string", "minLength": 1 }
+                            },
 
                             "vlan": {
                                 "type": "object",

@@ -17,6 +17,8 @@
       - firmware-misc-nonfree
       - wireless-regdb
       - wireless-tools
+      - systemd-resolved
+      - systemd-timesyncd
 
 - name: Uninstall packages
   apt:
@@ -25,14 +27,19 @@
       - ifupdown
       - dhcpcd
       - isc-dhcp-client
+      - resolvconf
     state: absent
 
 - name: Enable networkd
   systemd:
-    name: systemd-networkd
+    name: "{{item}}"
     enabled: true
     masked: false
     state: started
+  loop:
+    - systemd-networkd
+    - systemd-timesyncd
+    - systemd-resolved
 
 - name: Default interfaces file
   file:
