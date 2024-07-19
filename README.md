@@ -45,7 +45,7 @@ Interfaces:
 
 DHCP:
 
-- ✅ DHCP Client (systemd-networkd)
+- ✅ DHCP Client (systemd-networkd, systemd-resolved, systemd-timesyncd)
 - ✅ DHCP Server (dnsmasq)
 - ✅ DNS Server (dnsmasq)
 
@@ -79,7 +79,6 @@ TODO:
 ## Open Issues
 
 - [ath10k does not change country code](./README-wifi.md)
-- No support for static default gateways
 - nftables sets always masquerade on default gateway
 
 ## Install
