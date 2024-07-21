@@ -1,6 +1,10 @@
 ---
 # brickburg/linuxrouter/roles/dhcp/handlers/main.yml
 
+- name: 'Daemon reload'
+  systemd:
+    daemon_reload: true
+
 - name: 'Restart dnsmasq'
   systemd:
     name: dnsmasq

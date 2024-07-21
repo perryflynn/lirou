@@ -1,5 +1,6 @@
-# This file is managed by ansible
-# it configures the dnsmasq DNS and DHCP service
+# This file is managed by lirou / ansible
+# It configures the dnsmasq DNS and DHCP service
+# Docs: https://manpages.debian.org/bookworm/dnsmasq-base/dnsmasq.8.en.html
 
 # no wan interface
 {% if lr_upstreaminterfacenames|length > 0 %}
@@ -12,17 +13,15 @@ listen-address=127.0.0.1
 
 {% for lan in lr.lans %}
 {% if lan.upstream|default(False) == False and lan.dhcpd.enabled|default(False) == True %}
-# Interface '{{lan.name}}'
-interface={{lan.name}}
+# Interface '{{lan | brickburg.linuxrouter.interfacename}}'
+interface={{lan | brickburg.linuxrouter.interfacename}}
 listen-address={{lan.address}}
 
-dhcp-range=interface:{{lan.name}},{{lan.dhcpd.start}},{{lan.dhcpd.end}},{{lan.dhcpd.lease}}
-dhcp-option=interface:{{lan.name}},option:domain-search,home.arpa
+dhcp-range=interface:{{lan | brickburg.linuxrouter.interfacename}},{{lan.dhcpd.start}},{{lan.dhcpd.end}},{{lan.dhcpd.lease}}
+dhcp-option=interface:{{lan | brickburg.linuxrouter.interfacename}},option:domain-search,home.arpa
 
 {% endif %}
 {% endfor %}
 
 local=/home.arpa/
 address=/router.home.arpa/{{lr.primary_address}}
-
-# eof

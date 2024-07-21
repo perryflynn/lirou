@@ -7,6 +7,19 @@
     name:
       - dnsmasq
 
+- name: Configure dnsmasq service
+  ansible.builtin.lineinfile:
+    path: /etc/default/dnsmasq
+    regexp: '{{item.p}}'
+    line: '{{item.v}}'
+  loop:
+    - { p: '^ENABLED=', v: 'ENABLED=1' }
+    - { p: '^IGNORE_RESOLVCONF=', v: 'IGNORE_RESOLVCONF=yes' }
+    - { p: '^DNSMASQ_EXCEPT=', v: 'DNSMASQ_EXCEPT="lo"' }
+  notify:
+    - 'Daemon reload'
+    - 'Restart dnsmasq'
+
 - name: dnsmasq config
   template:
     src: files/dnsmasq.conf.j2

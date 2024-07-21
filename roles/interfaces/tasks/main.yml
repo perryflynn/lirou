@@ -41,6 +41,17 @@
     - systemd-timesyncd
     - systemd-resolved
 
+- name: Configure systemd-resolved
+  template:
+    src: files/systemd/resolved.conf.j2
+    dest: "/etc/systemd/resolved.conf"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  notify:
+    - 'Restart resolved'
+
+# Cleanup if-up-down files
 - name: Default interfaces file
   file:
     path: /etc/network/interfaces
