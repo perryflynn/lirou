@@ -45,6 +45,12 @@
             "items": {
                 "$ref": "#/definitions/interface-name"
             }
+        },
+        "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 32,
+            "pattern": "^[a-zA-Z0-9-_/ .]+$"
         }
     },
     "properties": {
@@ -151,12 +157,33 @@
                         "required": [ "name", "description", "kind", "state" ],
                         "properties": {
 
-                            "name": { "type": "string" },
-                            "description": { "type": "string", "minLength": 1, "maxLength": 32, "pattern": "^[a-zA-Z0-9-_/ .]+$" },
+                            "name": { "$ref": "#/definitions/interface-name" },
+                            "description": { "$ref": "#/definitions/description" },
                             "kind": { "type": "string", "enum": [ "interface", "vlan", "bridge" ] },
                             "state": { "$ref": "#/definitions/ansible-state" },
 
                             "upstream": { "type": "boolean" },
+
+                            "rename": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [ "enabled" ],
+                                "properties": {
+                                    "enabled": { "type": "boolean" },
+                                    "mac": { "$ref": "#/definitions/mac-address" },
+                                    "name": { "$ref": "#/definitions/interface-name" },
+                                    "altnames": {
+                                        "type": "array",
+                                        "items": { "$ref": "#/definitions/interface-name" }
+                                    }
+                                },
+                                "allOf": [
+                                    {
+                                        "if": { "properties": { "enabled": { "const": true } } },
+                                        "then": { "required": [ "mac", "name" ] }
+                                    }
+                                ]
+                            },
 
                             "dhcpclient": {
                                 "type": "object",
@@ -267,6 +294,10 @@
                             {
                                 "if": { "properties": { "kind": { "const": "bridge" } } },
                                 "then": { "required": [ "bridge" ] }
+                            },
+                            {
+                                "if": { "not": { "properties": { "kind": { "const": "interface" } } } },
+                                "then": { "not": { "required": [ "rename" ] } }
                             }
                         ]
                     }

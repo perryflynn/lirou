@@ -5,6 +5,11 @@
   systemd:
     daemon_reload: true
 
+- name: 'Trigger udev'
+  systemd_service:
+    name: systemd-udev-trigger
+    state: restarted
+
 - name: 'Reload networkd'
   shell:
     cmd: 'networkctl reload'

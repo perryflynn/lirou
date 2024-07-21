@@ -52,6 +52,7 @@
     - 'Restart resolved'
 
 # Cleanup if-up-down files
+
 - name: Default interfaces file
   file:
     path: /etc/network/interfaces
@@ -71,7 +72,7 @@
 - name: VLAN interface via systemd
   template:
     src: files/systemd/vlan.netdev.j2
-    dest: "/etc/systemd/network/vlan-{{item.vlan.interface}}.{{item.vlan.vid}}.netdev"
+    dest: "/etc/systemd/network/vlan-{{item.name}}.netdev"
     owner: root
     group: root
     mode: u=rw,g=r,o=r
@@ -82,7 +83,7 @@
 
 - name: Remove obsolete VLAN interface from systemd
   file:
-    path: "/etc/systemd/network/vlan-{{item.vlan.interface}}.{{item.vlan.vid}}.netdev"
+    path: "/etc/systemd/network/vlan-{{item.name}}.netdev"
     state: absent
   when: 'item.state == "absent"'
   loop: "{{lr.lans | selectattr('kind', 'eq', 'vlan')}}"
@@ -128,12 +129,54 @@
   notify:
     - 'Reload networkd'
 
+# Rename interfaces
+
+- name: Rename interface directives
+  template:
+    src: files/systemd/interface.link.j2
+    # the '10-' prefix is important; without, the rename will not work
+    dest: "/etc/systemd/network/10-{{item.name}}.link"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  when: 'item.state == "present" and "rename" in item and item.rename.enabled == True'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Trigger udev'
+
+- name: Remove obsolete interface rename directives
+  file:
+    path: "/etc/systemd/network/10-{{item.name}}.link"
+    state: absent
+  when: 'item.state == "absent" or ("rename" in item and item.rename.enabled == False)'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Trigger udev'
+
 # Classic interfaces
+
+- name: Ensure original files from renamed interfaces are deleted
+  file:
+    path: "/etc/systemd/network/{{item.name}}.network"
+    state: absent
+  when: '"rename" in item and item.rename.enabled == True'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Reload networkd'
+
+- name: Ensure files from renamed interfaces are deleted
+  file:
+    path: "/etc/systemd/network/{{item.rename.name}}.network"
+    state: absent
+  when: '"rename" in item and item.rename.enabled == False'
+  loop: "{{lr.lans}}"
+  notify:
+    - 'Reload networkd'
 
 - name: LAN interface via systemd
   template:
     src: files/systemd/lan.network.j2
-    dest: "/etc/systemd/network/{{item.name}}.network"
+    dest: "/etc/systemd/network/{{item | brickburg.linuxrouter.interfacename}}.network"
     owner: root
     group: root
     mode: u=rw,g=r,o=r
@@ -144,7 +187,7 @@
 
 - name: Remove obsolete LAN interfaces from systemd
   file:
-    path: "/etc/systemd/network/{{item.name}}.network"
+    path: "/etc/systemd/network/{{item | brickburg.linuxrouter.interfacename}}.network"
     state: absent
   when: 'item.state == "absent"'
   loop: "{{lr.lans}}"

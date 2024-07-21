@@ -1,8 +1,9 @@
-# This file is managed by Ansible
-# The file defines a VLAN on a network interface
+# This file is managed by lirou / ansible
+# It defines a VLAN on a network interface
+# Docs: https://www.freedesktop.org/software/systemd/man/latest/systemd.netdev.html
 
 [NetDev]
-Name={{item.vlan.interface}}.{{item.vlan.vid}}
+Name={{item.name}}
 Description={{item.description}}
 Kind=vlan
 

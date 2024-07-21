@@ -35,7 +35,7 @@
 - name: Ensure interface monitoring
   file:
     src: "/usr/share/munin/plugins/{{item.1}}"
-    dest: "/etc/munin/plugins/{{item.1}}{{item.0.name}}"
+    dest: "/etc/munin/plugins/{{item.1}}{{item.0 | brickburg.linuxrouter.interfacename}}"
     owner: root
     group: root
     state: "{{'link' if item.0.state == 'present' else 'absent'}}"

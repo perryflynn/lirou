@@ -1,0 +1,15 @@
+# This file is managed by lirou / ansible
+# It defines names for a interface by it's MAC address
+# Docs: https://www.freedesktop.org/software/systemd/man/latest/systemd.link.html
+
+[Match]
+MACAddress={{item.rename.mac}}
+
+[Link]
+Name={{item.rename.name}}
+AlternativeNamesPolicy=
+AlternativeName={{item.name}}
+
+{% for alias in item.rename.altnames|default([]) %}
+AlternativeName={{alias}}
+{% endfor %}

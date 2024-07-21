@@ -3,7 +3,7 @@
 
 - name: Generate interface lists (static)
   set_fact:
-    lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item.name ] }}"
+    lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item | brickburg.linuxrouter.interfacename ] }}"
   when: 'item.state == "present" and ("address" in item or item.dhcpclient.enabled|default(False)) and item.upstream|default(False) == False'
   loop: "{{lr.lans}}"
 
@@ -15,7 +15,7 @@
 
 - name: Generate upstream interface lists
   set_fact:
-    lr_upstreaminterfacenames: "{{ lr_upstreaminterfacenames | default([]) + [ item.name ] }}"
+    lr_upstreaminterfacenames: "{{ lr_upstreaminterfacenames | default([]) + [ item | brickburg.linuxrouter.interfacename ] }}"
   when: 'item.state == "present" and item.upstream|default(False) == True'
   loop: "{{lr.lans}}"
 

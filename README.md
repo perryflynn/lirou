@@ -80,6 +80,7 @@ TODO:
 
 - [ath10k does not change country code](./README-wifi.md)
 - nftables sets always masquerade on default gateway
+- [systemd-networkd does not reload changed netdevs](https://github.com/systemd/systemd/issues/9627)
 
 ## Install
 

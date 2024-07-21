@@ -1,8 +1,9 @@
-# This file is managed by ansible
-# The file defines a wired network interface
+# This file is managed by lirou / ansible
+# It defines a wired network interface
+# Docs: https://www.freedesktop.org/software/systemd/man/latest/systemd.network.html
 
 [Match]
-Name={{item.name}}
+Name={{item | brickburg.linuxrouter.interfacename}}
 
 [Network]
 Description={{item.description}}
@@ -41,12 +42,12 @@ Domains={{item.domains|join(' ')}}
 
 {% endif %}
 
-{% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'bridge') | selectattr('bridge.interfaces', 'contains', item.name) %}
+{% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'bridge') | selectattr('bridge.interfaces', 'contains', item | brickburg.linuxrouter.interfacename) %}
 {% if bridges|length == 1 %}
 Bridge={{bridges[0].name}}
 {% endif %}
 
-{% set vlans = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'vlan') | selectattr('vlan.interface', 'eq', item.name) %}
+{% set vlans = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'vlan') | selectattr('vlan.interface', 'eq', item | brickburg.linuxrouter.interfacename) %}
 {% for vlan in vlans %}
 VLAN={{vlan.name}}
 {% endfor %}
