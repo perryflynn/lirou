@@ -16,7 +16,8 @@
         mode: u=rw,go=r
         content: |
           {
-              "last_update": "{{ansible_date_time.iso8601}}"
+              "last_update": "{{ansible_date_time.iso8601}}",
+              "config_sha1checksum": "{{configinfo.checksum}}"
           }
 
   tasks:
@@ -52,6 +53,7 @@
         owner: root
         group: root
         mode: u=rw,go-
+      register: configinfo
       notify:
         - Update timestamp
 
