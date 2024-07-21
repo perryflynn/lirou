@@ -1,6 +1,32 @@
 ---
 # brickburg/linuxrouter/roles/params/tasks/main.yml
 
+- name: Install packages
+  apt:
+    force_apt_get: yes
+    name:
+      - python3-jsonschema
+
+- name: Validate lirou configuration against schema
+  ansible.utils.validate:
+    data: "{{ ({ 'lr': lr }) }}"
+    criteria:
+      - "{{lookup('file',  ((role_path + '/../../lirou-config-schema.json') | realpath)) | from_json}}"
+    engine: ansible.utils.jsonschema
+  ignore_errors: true
+  register: result
+
+- name: Print lirou config validation errors
+  ansible.builtin.debug:
+    msg: "In {{item.data_path}}: {{item.message}}"
+  loop: "{{ result['errors'] }}"
+  when: "'errors' in result"
+
+- name: Fail on lirou config validation errors
+  fail:
+    msg: 'lirou configuration contains errors, open the config file in a IDE like VSCode and enable schema validation to see more details. Abort.'
+  when: "'errors' in result"
+
 - name: Generate interface lists (static)
   set_fact:
     lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item | brickburg.linuxrouter.interfacename ] }}"
