@@ -1,5 +1,8 @@
 #!/usr/sbin/nft -f
 
+# This file is managed by lirou / ansible
+# It imports all rules from the nftables.d folder and configures the nftables firewall
+
 {% if bbnftfolder_flushall %}
 flush ruleset
 {% endif %}

@@ -1,3 +1,6 @@
+# This file is managed by lirou / ansible
+# It configures the nftables firewall ruleset
+
 define DEV_WORLD = {{lr_upstreaminterfacenames[0]}}
 
 define DEV_PRIVATE = { {{lr_laninterfacenames | default([]) | join(', ')}} }

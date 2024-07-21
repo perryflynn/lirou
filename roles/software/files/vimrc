@@ -1,3 +1,6 @@
+" This file is managed by lirou / ansible
+" It configures vim
+
 set mouse=
 set background=dark
 syntax on

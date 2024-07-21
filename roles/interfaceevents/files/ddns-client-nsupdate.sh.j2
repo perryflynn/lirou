@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This file is managed by lirou / ansible
+# It is triggered by networkd-dispatcher to update DynDNS records
+
 CONF_INTERFACE="{{ddnsitem.interface}}"
 CONF_SERVER="{{ddnsitem.properties.server}}"
 CONF_DOMAIN="{{ddnsitem.properties.domain}}"
