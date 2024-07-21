@@ -41,7 +41,7 @@
         mode: u=rwx,go=-
         state: directory
       loop:
-        - "{{lirou_basedir}}/collections/ansible_collections/brickburg/linuxrouter"
+        - "{{lirou_basedir}}/collections/ansible_collections/brickburg"
         - "{{lirou_basedir}}/inventory"
         - "{{lirou_basedir}}/roles"
         - "{{lirou_etcdir}}"
