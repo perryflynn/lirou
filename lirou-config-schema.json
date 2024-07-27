@@ -156,6 +156,11 @@
                     ]
                 },
 
+                "obsolete_interfaces": {
+                    "type": "array",
+                    "items": { "$ref": "#/definitions/interface-name" }
+                },
+
                 "lans": {
                     "type": "array",
                     "minItems": 1,

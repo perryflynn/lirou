@@ -51,6 +51,10 @@
   notify:
     - 'Restart resolved'
 
+#- debug: { var: lirou_absent_interfaces }
+#- debug: { var: lirou_interfaces_to_delete }
+#- fail:
+
 # Cleanup if-up-down files
 
 - name: Default interfaces file
@@ -83,10 +87,9 @@
 
 - name: Remove obsolete VLAN interface from systemd
   file:
-    path: "/etc/systemd/network/vlan-{{item.name}}.netdev"
+    path: "/etc/systemd/network/vlan-{{item}}.netdev"
     state: absent
-  when: 'item.state == "absent"'
-  loop: "{{lr.lans | selectattr('kind', 'eq', 'vlan')}}"
+  loop: "{{lirou_absent_interfaces}}"
   notify:
     - 'Reload networkd'
 
@@ -122,10 +125,9 @@
 
 - name: Remove obsolete Bridge interface from systemd
   file:
-    path: "/etc/systemd/network/bridge-{{item.name}}.netdev"
+    path: "/etc/systemd/network/bridge-{{item}}.netdev"
     state: absent
-  when: 'item.state == "absent"'
-  loop: "{{lr.lans | selectattr('kind', 'eq', 'bridge')}}"
+  loop: "{{lirou_absent_interfaces}}"
   notify:
     - 'Reload networkd'
 
@@ -148,7 +150,7 @@
   file:
     path: "/etc/systemd/network/10-{{item.name}}.link"
     state: absent
-  when: 'item.state == "absent" or ("rename" in item and item.rename.enabled == False)'
+  when: 'item.state == "absent" or item.rename.enabled|default(False) == False'
   loop: "{{lr.lans}}"
   notify:
     - 'Trigger udev'
@@ -159,7 +161,7 @@
   file:
     path: "/etc/systemd/network/{{item.name}}.network"
     state: absent
-  when: '"rename" in item and item.rename.enabled == True'
+  when: 'item.rename.enabled|default(False) == True'
   loop: "{{lr.lans}}"
   notify:
     - 'Reload networkd'
@@ -168,7 +170,7 @@
   file:
     path: "/etc/systemd/network/{{item.rename.name}}.network"
     state: absent
-  when: '"rename" in item and item.rename.enabled == False'
+  when: '"rename" in item and "name" in item.rename and item.rename.enabled|default(False) == False'
   loop: "{{lr.lans}}"
   notify:
     - 'Reload networkd'
@@ -180,19 +182,34 @@
     owner: root
     group: root
     mode: u=rw,g=r,o=r
-  when: 'item.state == "present"'
-  loop: "{{lr.lans}}"
+  loop: "{{lr.lans | selectattr('state', 'eq', 'present')}}"
   notify:
     - 'Reload networkd'
 
 - name: Remove obsolete LAN interfaces from systemd
   file:
-    path: "/etc/systemd/network/{{item | brickburg.linuxrouter.interfacename}}.network"
+    path: "/etc/systemd/network/{{item}}.network"
     state: absent
-  when: 'item.state == "absent"'
-  loop: "{{lr.lans}}"
+  loop: "{{lirou_absent_interfaces}}"
   notify:
     - 'Reload networkd'
+
+# - name: Delete existing unwanted network interfaces
+#   shell: |
+#     if [ ! -e /sys/class/net/{{item | quote}} ]; then
+#       exit 128
+#     fi
+#     ip link set down {{item | quote}} || true
+#     ip link delete {{item | quote}}
+#   # task from: https://github.com/stuvusIT/ansible_systemd_network/blob/master/tasks/main.yml
+#   # From `man ip`:
+#   # Exit status is 0 if command was successful, and 1 if there is a syntax error.  If an error was reported by the kernel exit status is 2.
+#   register: result
+#   failed_when: result.rc not in [0, 128]
+#   changed_when: result.rc != 128
+#   loop: "{{lirou_interfaces_to_delete}}"
+#   notify:
+#     - Reload networkd
 
 # Wifi
 

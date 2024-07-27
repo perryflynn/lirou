@@ -1,6 +1,8 @@
 ---
 # brickburg/linuxrouter/roles/params/tasks/main.yml
 
+# Validate
+
 - name: Install packages
   apt:
     force_apt_get: yes
@@ -27,6 +29,8 @@
     msg: 'lirou configuration contains errors, open the config file in a IDE like VSCode and enable schema validation to see more details. Abort.'
   when: "'errors' in result"
 
+# Generate
+
 - name: Generate interface lists (static)
   set_fact:
     lr_laninterfacenames: "{{ lr_laninterfacenames | default([]) + [ item | brickburg.linuxrouter.interfacename ] }}"
@@ -44,6 +48,27 @@
     lr_upstreaminterfacenames: "{{ lr_upstreaminterfacenames | default([]) + [ item | brickburg.linuxrouter.interfacename ] }}"
   when: 'item.state == "present" and item.upstream|default(False) == True'
   loop: "{{lr.lans}}"
+
+- name: Generate absent interface list
+  set_fact:
+    lirou_absent_interfaces: >-
+      {{
+          (
+              (lr.lans | selectattr('state', 'eq', 'absent') | map('brickburg.linuxrouter.interfacename') | list) +
+              (lr.lans | selectattr('rename.enabled', 'defined') | selectattr('rename.enabled', 'true') | map(attribute='name')) +
+              (lr.lans | selectattr('rename.enabled', 'defined') | selectattr('rename.name', 'defined') | selectattr('rename.enabled', 'false') | map(attribute='rename.name')) +
+              (lr.obsolete_interfaces|default([]))
+          ) | unique | list
+      }}
+
+- name: Generate list of interfaces to be deleted
+  set_fact:
+    lirou_interfaces_to_delete: >-
+      {{
+          ansible_interfaces | select('in', lirou_absent_interfaces) | list
+      }}
+
+# Post Validate
 
 - name: Fail when no upstream found
   fail:

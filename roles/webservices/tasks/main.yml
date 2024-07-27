@@ -44,6 +44,17 @@
     - Restart munin-node
     - Restart munin
 
+- name: Remove obsolete interfaces from monitoring
+  file:
+    path: "/etc/munin/plugins/{{item.1}}{{item.0}}"
+    owner: root
+    group: root
+    state: absent
+  loop: "{{lirou_absent_interfaces | product([ 'if_', 'if_err_' ]) | list}}"
+  notify:
+    - Restart munin-node
+    - Restart munin
+
 - name: Munin configuration
   template:
     src: files/munin.conf.j2
