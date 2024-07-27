@@ -8,43 +8,55 @@ define NET_PRIVATE = { {{lr_lansubnets | default([]) | join(', ')}} }
 
 table ip global {
 
-    chain inbound_world {
-        icmp type echo-request limit rate 5/second accept
-        tcp dport ssh accept
+    # chain inbound_world {
+    #     icmp type echo-request limit rate 5/second accept
+    #     tcp dport ssh accept
+    #
+    #     accept
+    # }
 
-        accept
-    }
-
-    chain inbound_private {
-        icmp type echo-request limit rate 5/second accept
-
-        # allow DHCP, DNS and SSH from the private network
-        ip protocol . th dport vmap { tcp . 22 : accept, udp . 53 : accept, tcp . 53 : accept, udp . 67 : accept }
-
-        accept
-    }
+    # chain inbound_private {
+    #     icmp type echo-request limit rate 5/second accept
+    #
+    #     # allow DHCP, DNS and SSH from the private network
+    #     ip protocol . th dport vmap { tcp . 22 : accept, udp . 53 : accept, tcp . 53 : accept, udp . 67 : accept }
+    #
+    #     accept
+    # }
 
     chain inbound {
         type filter hook input priority 0; policy drop;
         ct state vmap { established : accept, related : accept, invalid : drop }
-        iifname lo accept
-        iifname $DEV_WORLD jump inbound_world
-        iifname $DEV_PRIVATE jump inbound_private
+
+        # iifname lo accept
+        # iifname $DEV_WORLD jump inbound_world
+        # iifname $DEV_PRIVATE jump inbound_private
+
+        accept
     }
 
     chain forward {
         type filter hook forward priority 0; policy drop;
-        ct state vmap { established : accept, related : accept, invalid : drop }
-        iifname $DEV_PRIVATE accept
+
+        # ct state vmap { established : accept, related : accept, invalid : drop }
+        # iifname $DEV_PRIVATE accept
+
+        accept
     }
 
     chain postrouting {
         type nat hook postrouting priority 100; policy accept;
-        ip saddr $NET_PRIVATE oifname $DEV_WORLD masquerade
+
+        {% for lan in  lr.lans %}
+        {% if lan.masquerade_outgoing.enabled|default(False) %}
+        {% if lan.masquerade_outgoing.sourceinterfaces|default([])|length > 0 %}ip saddr { {{lan.masquerade_outgoing.sourceinterfaces|join(', ')}} }{% endif %} oifname {{lan | brickburg.linuxrouter.interfacename}} masquerade
+        {% endif %}
+        {% endfor %}
     }
 
     chain prerouting {
             type nat hook prerouting priority dstnat; policy accept;
+
             {% for dnat in lr.dnat|default([]) %}
             iifname {{dnat.src.intf}} ip daddr {{dnat.src.addr}} dnat to {{dnat.dest.addr}}
             {% endfor %}
