@@ -24,14 +24,18 @@
     value: "{{item.v}}"
     sysctl_file: /etc/sysctl.d/42-linux-router.conf
     reload: true
-    sysctl_set: true
+    #sysctl_set: true
     state: "{{'present' if item.p else 'absent'}}"
   loop:
-    - { f: 'net.ipv4.ip_forward', v: '1', p: true }
+    # https://www.kernel.org/doc/Documentation/networking/ip-sysctl.txt
+    #- { f: 'net.ipv4.ip_forward', v: '0', p: false }
+    - { f: 'net.ipv4.conf.all.forwarding', v: '1', p: true }
+    - { f: 'net.ipv4.conf.default.forwarding', v: '1', p: true }
     # disable ipv6 for now
     - { f: 'net.ipv6.conf.all.disable_ipv6', v: '1', p: true }
     - { f: 'net.ipv6.conf.default.disable_ipv6', v: '1', p: true }
-    - { f: 'net.ipv6.conf.all.forwarding', v: '1', p: false }
+    - { f: 'net.ipv6.conf.all.forwarding', v: '0', p: false }
+    - { f: 'net.ipv6.conf.default.forwarding', v: '0', p: false }
     # https://blog.confirm.ch/sysctl-tuning-linux/
     # ignore icmp broadcasts
     - { f: 'net.ipv4.icmp_echo_ignore_broadcasts', v: '1', p: true }
@@ -46,6 +50,8 @@
     # strict reverse path filtering
     - { f: 'net.ipv4.conf.all.rp_filter', v: '1', p: true }
     - { f: 'net.ipv4.conf.default.rp_filter', v: '1', p: true }
+    # arp filtering
+    - { f: 'net.ipv4.conf.all.arp_filter', v: '0', p: true }
     # socket buffers
     - { f: 'net.ipv4.tcp_rmem', v: '4096 87380 8388608', p: true }
     - { f: 'net.ipv4.tcp_wmem', v: '4096 87380 8388608', p: true }

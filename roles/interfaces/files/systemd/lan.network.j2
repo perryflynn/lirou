@@ -8,6 +8,8 @@ Name={{item | brickburg.linuxrouter.interfacename}}
 [Network]
 Description={{item.description}}
 LinkLocalAddressing=no
+#IPv4Forwarding={{'true' if item.forward_incoming|default(False) == True or item.masquerade_outgoing|default(False) == True else 'false'}}
+#IPMasquerade={{'ipv4' if item.masquerade_outgoing|default(False) == True else 'no'}}
 
 {% if item.upstream|default(False) == True or 'gateway' in item %}
 LLMNR=false
@@ -57,6 +59,7 @@ VLAN={{vlan.name}}
 UseRoutes={{'true' if item.dhcpclient.pull_routes|default(False) else 'false'}}
 UseGateway={{'true' if item.dhcpclient.pull_gateway|default(False) else 'false'}}
 UseDomains={{'true' if item.dhcpclient.pull_domains|default(False) else 'false'}}
+UseHostname=false
 {% endif %}
 
 {% for ip in item.additionalips|default([]) %}
