@@ -3,7 +3,11 @@
 # Docs: https://www.freedesktop.org/software/systemd/man/latest/systemd.link.html
 
 [Match]
+{% if 'mac' in item.rename %}
 MACAddress={{item.rename.mac}}
+{% else %}
+OriginalName={{item.name}}
+{% endif %}
 
 [Link]
 Name={{item.rename.name}}
