@@ -186,26 +186,11 @@
                                 }
                             },
 
-                            "rename": {
-                                "type": "object",
-                                "additionalProperties": false,
-                                "required": [ "enabled" ],
-                                "description": "Renames the interface to the given name. Per default the original name is used to detect the correct interface, optional a MAC address can be defined to detect the interface.",
-                                "properties": {
-                                    "enabled": { "type": "boolean" },
-                                    "mac": { "$ref": "#/definitions/mac-address", "description": "MAC address to be used to detect the interface to be renamed. Optional." },
-                                    "name": { "$ref": "#/definitions/interface-name" },
-                                    "altnames": {
-                                        "type": "array",
-                                        "items": { "$ref": "#/definitions/interface-name" }
-                                    }
-                                },
-                                "allOf": [
-                                    {
-                                        "if": { "properties": { "enabled": { "const": true } } },
-                                        "then": { "required": [ "name" ] }
-                                    }
-                                ]
+                            "aliases": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/interface-name"
+                                }
                             },
 
                             "dhcpclient": {

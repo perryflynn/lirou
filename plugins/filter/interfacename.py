@@ -46,8 +46,8 @@ def get_interfacename(obj):
     if not isinstance(obj, dict):
         raise AnsibleFilterError(f'interfacename requires a dict')
 
-    if obj['kind'] == 'interface' and 'rename' in obj and obj['rename']['enabled'] == True:
-        return obj['rename']['name']
+    #if obj['kind'] == 'interface' and 'rename' in obj and obj['rename']['enabled'] == True:
+    #    return obj['rename']['name']
 
     if not ('name' in obj):
         raise AnsibleFilterError(f'interfacename requires a valid interface definition, did not found name property')

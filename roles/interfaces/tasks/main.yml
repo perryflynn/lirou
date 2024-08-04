@@ -51,10 +51,6 @@
   notify:
     - 'Restart resolved'
 
-#- debug: { var: lirou_absent_interfaces }
-#- debug: { var: lirou_interfaces_to_delete }
-#- fail:
-
 # Cleanup if-up-down files
 
 - name: Default interfaces file
@@ -131,29 +127,29 @@
   notify:
     - 'Reload networkd'
 
-# Rename interfaces
+# # Rename interfaces
 
-- name: Rename interface directives
-  template:
-    src: files/systemd/interface.link.j2
-    # the '10-' prefix is important; without, the rename will not work
-    dest: "/etc/systemd/network/10-{{item.name}}.link"
-    owner: root
-    group: root
-    mode: u=rw,g=r,o=r
-  when: 'item.state == "present" and "rename" in item and item.rename.enabled == True'
-  loop: "{{lr.lans}}"
-  notify:
-    - 'Trigger udev'
+# - name: Rename interface directives
+#   template:
+#     src: files/systemd/interface.link.j2
+#     # the '10-' prefix is important; without, the rename will not work
+#     dest: "/etc/systemd/network/10-{{item.name}}.link"
+#     owner: root
+#     group: root
+#     mode: u=rw,g=r,o=r
+#   when: 'item.state == "present" and "rename" in item and item.rename.enabled == True'
+#   loop: "{{lr.lans}}"
+#   notify:
+#     - 'Trigger udev'
 
-- name: Remove obsolete interface rename directives
-  file:
-    path: "/etc/systemd/network/10-{{item.name}}.link"
-    state: absent
-  when: 'item.state == "absent" or item.rename.enabled|default(False) == False'
-  loop: "{{lr.lans}}"
-  notify:
-    - 'Trigger udev'
+# - name: Remove obsolete interface rename directives
+#   file:
+#     path: "/etc/systemd/network/10-{{item.name}}.link"
+#     state: absent
+#   when: 'item.state == "absent" or item.rename.enabled|default(False) == False'
+#   loop: "{{lr.lans}}"
+#   notify:
+#     - 'Trigger udev'
 
 # Classic interfaces
 
@@ -194,22 +190,49 @@
   notify:
     - 'Reload networkd'
 
-# - name: Delete existing unwanted network interfaces
-#   shell: |
-#     if [ ! -e /sys/class/net/{{item | quote}} ]; then
-#       exit 128
-#     fi
-#     ip link set down {{item | quote}} || true
-#     ip link delete {{item | quote}}
-#   # task from: https://github.com/stuvusIT/ansible_systemd_network/blob/master/tasks/main.yml
-#   # From `man ip`:
-#   # Exit status is 0 if command was successful, and 1 if there is a syntax error.  If an error was reported by the kernel exit status is 2.
-#   register: result
-#   failed_when: result.rc not in [0, 128]
-#   changed_when: result.rc != 128
-#   loop: "{{lirou_interfaces_to_delete}}"
-#   notify:
-#     - Reload networkd
+# Interface aliases
+
+- name: Interface alias service units
+  template:
+    src: files/systemd/interface-alias.service.j2
+    dest: "/etc/systemd/system/lirou-ifalias-{{item.0.name}}-{{item.1}}.service"
+    owner: root
+    group: root
+    mode: u=rw,g=r,o=r
+  loop: "{{q('ansible.builtin.subelements', lr.lans, 'aliases', { 'skip_missing': True })}}"
+  when: "item.0.state == 'present'"
+  vars:
+    ifname: "{{item.0.name}}"
+    ifalias: "{{item.1}}"
+  notify:
+    - Restart interface aliases
+
+- name: Enable interface alias service unit
+  systemd:
+    name: "lirou-ifalias-{{item.0.name}}-{{item.1}}"
+    enabled: true
+    daemon_reload: true
+  loop: "{{q('ansible.builtin.subelements', lr.lans, 'aliases', { 'skip_missing': True })}}"
+  when: "item.0.state == 'present'"
+  notify:
+    - Restart interface aliases
+
+- name: Disable obsolete interface aliases
+  systemd:
+    name: "lirou-ifalias-{{item.0.name}}-{{item.1}}"
+    state: stopped
+    enabled: false
+  loop: "{{q('ansible.builtin.subelements', lr.lans, 'aliases', { 'skip_missing': True })}}"
+  when: 'item.0.state == "absent"'
+
+- name: Delete obsolete interface aliases
+  file:
+    path: "/etc/systemd/system/lirou-ifalias-{{item.0.name}}-{{item.1}}.service"
+    state: absent
+  loop: "{{q('ansible.builtin.subelements', lr.lans, 'aliases', { 'skip_missing': True })}}"
+  when: 'item.0.state == "absent"'
+  notify:
+    - Daemon reload
 
 # Wifi
 

@@ -5,10 +5,10 @@
   systemd:
     daemon_reload: true
 
-- name: 'Trigger udev'
-  systemd_service:
-    name: systemd-udev-trigger
-    state: restarted
+# - name: 'Trigger udev'
+#   systemd_service:
+#     name: systemd-udev-trigger
+#     state: restarted
 
 - name: 'Reload networkd'
   shell:
@@ -29,6 +29,10 @@
 - name: 'Restart wpa_supplicant'
   shell:
     cmd: 'systemctl restart --all "wpa_supplicant@*.service"'
+
+- name: 'Restart interface aliases'
+  shell:
+    cmd: 'systemctl restart --all "lirou-ifalias-*.service"'
 
 - name: 'Restart hostapd'
   shell:

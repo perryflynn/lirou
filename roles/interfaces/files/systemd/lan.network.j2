@@ -44,14 +44,14 @@ Domains={{item.domains|join(' ')}}
 
 {% endif %}
 
-{% set bridges = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'bridge') | selectattr('bridge.interfaces', 'contains', item | brickburg.linuxrouter.interfacename) %}
+{% set bridges = lr.lans | select('brickburg.linuxrouter.isinterfacebridge', item) %}
 {% if bridges|length == 1 %}
-Bridge={{bridges[0].name}}
+Bridge={{bridges[0] | brickburg.linuxrouter.interfacename}}
 {% endif %}
 
-{% set vlans = lr.lans | selectattr('state', 'eq', 'present') | selectattr('kind', 'eq', 'vlan') | selectattr('vlan.interface', 'eq', item | brickburg.linuxrouter.interfacename) %}
+{% set vlans = lr.lans | select('brickburg.linuxrouter.isinterfacevlan', item) %}
 {% for vlan in vlans %}
-VLAN={{vlan.name}}
+VLAN={{vlan | brickburg.linuxrouter.interfacename}}
 {% endfor %}
 
 {% if item.dhcpclient.enabled|default(False) == True %}
