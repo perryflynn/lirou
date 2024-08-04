@@ -42,6 +42,7 @@ Interfaces:
 - ✅ Wifi Client as WAN/Upstream interface (systemd-networkd)
 - ✅ Additional interface IPs (systemd-networkd)
 - ✅ networkd-dispatcher for interface event scripts
+- 🟨 Interface aliases
 
 DHCP:
 
@@ -81,6 +82,9 @@ TODO:
 - [ath10k does not change country code](./README-wifi.md)
 - nftables sets always masquerade on default gateway
 - [systemd-networkd does not reload changed netdevs](https://github.com/systemd/systemd/issues/9627)
+- `IPv4Forwarding` in networkd does not work
+- Initial `lirou-apply.sh` breaks network connectivity in the middle of the playbook execution when
+  current network was configured by ifupdown
 
 ## Install
 
@@ -116,6 +120,10 @@ linuxrouter:
     }
 }
 ```
+
+## Architecture Decisions
+
+The archtirecture decisions can be found [here](./README-architecture.md).
 
 ## Credits
 
