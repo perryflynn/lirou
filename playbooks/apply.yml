@@ -5,8 +5,6 @@
   vars_files:
     - /etc/lirou/config.yml
 
-  # TODO: ansible-playbook --force-handlers
-
   tasks:
 
     - name: Prepare Parameters

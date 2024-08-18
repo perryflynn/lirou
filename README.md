@@ -59,6 +59,8 @@ Firewall:
 Services:
 
 - ✅ DynDNS via nsupdate
+- ✅ NGINX Webserver and self-signed certificate
+- ✅ Munin Interface Monitoring
 
 Hardware:
 
