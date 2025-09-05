@@ -94,6 +94,14 @@
         mode: u=rwx,go=-
         state: directory
 
+    - name: Symlink ansible.cfg to ansible config dir
+      file:
+        src: "{{lirou_basedir}}/ansible.cfg"
+        dest: /etc/ansible/ansible.cfg
+        owner: root
+        group: root
+        state: link
+
     - name: Create ansible local facts dir
       file:
         path: /etc/ansible/facts.d
@@ -102,13 +110,15 @@
         mode: u=rwx,go=-
         state: directory
 
-    - name: Symlink ansible.cfg to ansible config dir
-      file:
-        src: "{{lirou_basedir}}/ansible.cfg"
-        dest: /etc/ansible/ansible.cfg
+    - name: iproute2 facts
+      copy:
+        dest: "/etc/ansible/facts.d/lirou_iproute2_address.fact"
         owner: root
         group: root
-        state: link
+        mode: u=rwx,go=rx
+        content: |
+          #!/bin/bash
+          /usr/sbin/ip -d --json address
 
     - name: Create inventory file
       copy:
