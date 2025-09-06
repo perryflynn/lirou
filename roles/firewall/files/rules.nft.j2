@@ -45,20 +45,24 @@ table ip global {
     }
 
     chain postrouting {
-        type nat hook postrouting priority 100; policy accept;
+        type nat hook postrouting priority srcnat; policy accept;
 
         {% for lan in  lr.lans %}
         {% if lan.masquerade_outgoing.enabled|default(False) %}
         {% if lan.masquerade_outgoing.sourceinterfaces|default([])|length > 0 %}ip saddr { {{lan.masquerade_outgoing.sourceinterfaces|join(', ')}} }{% endif %} oifname {{lan | brickburg.linuxrouter.interfacename}} masquerade
         {% endif %}
         {% endfor %}
+
+        {% for snat in lr.snat %}
+        ip daddr {{snat.dest.addr}} snat to {{snat.via.addr}}
+        {% endfor %}
     }
 
     chain prerouting {
-            type nat hook prerouting priority dstnat; policy accept;
+        type nat hook prerouting priority dstnat; policy accept;
 
-            {% for dnat in lr.dnat|default([]) %}
-            iifname {{dnat.src.intf}} ip daddr {{dnat.src.addr}} dnat to {{dnat.dest.addr}}
-            {% endfor %}
+        {% for dnat in lr.dnat|default([]) %}
+        iifname {{dnat.src.intf}} ip daddr {{dnat.src.addr}} dnat to {{dnat.dest.addr}}
+        {% endfor %}
     }
 }
