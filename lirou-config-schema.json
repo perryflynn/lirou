@@ -73,6 +73,19 @@
                 "admin": { "type": "string" },
                 "contact": { "type": "string", "pattern": "^[^@]+@[^@]+$" },
 
+                "serial_interfaces": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "device", "state" ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "device": { "type": "string", "pattern": "^tty[A-Z]{1,}[0-9]{1,}$" },
+                            "state": { "$ref": "#/definitions/ansible-state" }
+                        }
+                    }
+                },
+
                 "networkeventlog": { "type": "boolean" },
 
                 "root_password": { "type": "string", "pattern": "^\\$.+" },
@@ -328,6 +341,33 @@
                                 }
                             },
                             "dest": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [ "addr" ],
+                                "properties": {
+                                    "addr": { "$ref": "#/definitions/ip-address" }
+                                }
+                            }
+                        }
+                    }
+                },
+
+                "snat": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [ "dest", "via" ],
+                        "properties": {
+                            "dest": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [ "addr" ],
+                                "properties": {
+                                    "addr": { "$ref": "#/definitions/ip-cidr" }
+                                }
+                            },
+                            "via": {
                                 "type": "object",
                                 "additionalProperties": false,
                                 "required": [ "addr" ],
