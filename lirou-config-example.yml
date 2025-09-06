@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=lirou-config-schema.json
 lr:
   hostname: linux-router
   description: Test Router
@@ -12,6 +13,11 @@ lr:
   root_keys:
     - key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOV1xAo4NOKpc4y0wcr3NqgVNMdMkxeD2UzVK0SAVuvt
       comment: mykey
+
+  # enable systemd getty for ttyUSB0
+  serial_interfaces:
+    - device: ttyUSB0
+      state: present
 
   # primary system IP
   primary_address: '172.23.24.254'
@@ -62,6 +68,8 @@ lr:
     # Wifi Interface
     - name: wlp5s0
       description: Wifi Client
+      aliases:
+        - wifi-client
       kind: interface
       state: present
       dhcpclient:
@@ -77,6 +85,8 @@ lr:
     # First LAN Interface
     - name: enp1s0
       description: WAN
+      aliases:
+        - wan
       kind: interface
       state: present
       dhcpclient:
@@ -88,17 +98,23 @@ lr:
     # Second LAN Interface
     - name: enp2s0
       description: Admin
+      aliases:
+        - admin
       kind: interface
       state: present
 
     # Third LAN Interface
     - name: enp3s0
       description: Mixed
+      aliases:
+        - mixed
       kind: interface
       state: present
 
     - name: enp3s0.25
       description: Clients on Mixed
+      aliases:
+        - mixed25
       kind: vlan
       state: present
       vlan:
@@ -108,11 +124,15 @@ lr:
     # Fourth LAN Interface
     - name: enp4s0
       description: VLAN-only
+      aliases:
+        - vlanonly
       kind: interface
       state: present
 
     - name: enp4s0.24
       description: Management on VLAN-only
+      aliases:
+        - vlanonly24
       kind: vlan
       state: present
       vlan:
@@ -121,6 +141,8 @@ lr:
 
     - name: enp4s0.25
       description: Clients on VLAN-only
+      aliases:
+        - vlanonly25
       kind: vlan
       state: present
       vlan:
@@ -130,12 +152,16 @@ lr:
     # Wifi AP Interface
     - name: wlan_access
       description: Client WLAN
+      aliases:
+        - wifi-ap
       kind: interface
       state: present
 
     # Admin Bridge
     - name: lanbr24
       description: Management
+      aliases:
+        - brmanagement
       kind: bridge
       state: present
       bridge:
@@ -151,6 +177,8 @@ lr:
     # Clients Bridge
     - name: lanbr25
       description: Clients
+      aliases:
+        - brclients
       kind: bridge
       state: present
       bridge:
@@ -169,3 +197,9 @@ lr:
         addr: '192.168.42.231'
       dest:
         addr: '172.23.28.10'
+
+  snat:
+    - dest:
+        addr: '172.23.28.117/32'
+      via:
+        addr: '172.23.28.254'

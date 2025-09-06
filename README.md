@@ -1,3 +1,11 @@
+```txt
+ ▀▀█      ▀                        
+   █    ▄▄▄     ▄ ▄▄   ▄▄▄   ▄   ▄ 
+   █      █     █▀  ▀ █▀ ▀█  █   █ 
+   █      █     █     █   █  █   █ 
+   ▀▄▄  ▄▄█▄▄   █     ▀█▄█▀  ▀▄▄▀█
+```
+
 # linux-router
 
 > *SaaR - systemd as a Router*
@@ -7,9 +15,9 @@ Router based on good ol' classic Debian Stable, but with systemd as network- and
 ## Current State
 
 Interfaces, WAN Interface / SNAT / Masquerade, DHCP/DNS, Wifi and Routing works, 
-Firewall just one static ruleset. Basic support for DNAT.
+Firewall just open, Basic support for DNAT.
 
-The project in general, is a work-in-progress.
+The project in general is a work-in-progress.
 
 ## Features
 
@@ -29,6 +37,7 @@ OS:
 - ✅ lm-sensors
 - ✅ SMART
 - ✅ Kernel Flags
+- ✅ Serial Interfaces (getty)
 
 Interfaces:
 
@@ -42,7 +51,7 @@ Interfaces:
 - ✅ Wifi Client as WAN/Upstream interface (systemd-networkd)
 - ✅ Additional interface IPs (systemd-networkd)
 - ✅ networkd-dispatcher for interface event scripts
-- 🟨 Interface aliases
+- ✅ Interface aliases
 
 DHCP:
 
@@ -113,7 +122,7 @@ linuxrouter:
 ## Config Schema
 
 - Install the VSCode extension `redhat.vscode-yaml`
-- Configure schema:
+- Configure schema **OR** use `# yaml-language-server: $schema=file.yml` comment in line 1 of config
 
 ```json
 {
