@@ -28,6 +28,11 @@
         name: brickburg.linuxrouter.software
         apply: { tags: [ system, software ] }
 
+    - name: Setup serial interface
+      include_role:
+        name: brickburg.linuxrouter.serial
+        apply: { tags: [ system ] }
+
     - name: Setup Interfaces
       include_role:
         name: brickburg.linuxrouter.interfaces

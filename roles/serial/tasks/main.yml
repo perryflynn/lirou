@@ -1,0 +1,9 @@
+---
+# brickburg/linuxrouter/roles/serial/tasks/main.yml
+
+- name: Setup serial TTY interface
+  systemd_service:
+    name: "getty@{{item.device}}"
+    enabled: "{{True if item.state == 'present' else False}}"
+    state: "{{'started' if item.state == 'present' else 'stopped'}}"
+  loop: "{{lr.serial_interfaces|default([])}}"
