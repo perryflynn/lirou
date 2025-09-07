@@ -54,7 +54,7 @@
       include_role:
         name: brickburg.linuxrouter.dhcp
         apply: { tags: [ interfaces, services, dhcp ] }
-      tags: [ interfaces, services, dhcp ]
+      tags: [ interfaces, services, dhcp, dns ]
 
     - name: Setup Firewall
       include_role:

@@ -2,14 +2,16 @@
 # It configures the dnsmasq DNS and DHCP service
 # Docs: https://manpages.debian.org/bookworm/dnsmasq-base/dnsmasq.8.en.html
 
-# no wan interface
-{% if lr_upstreaminterfacenames|length > 0 %}
-except-interface={{lr_upstreaminterfacenames[0]}}
-{% endif %}
-
 # dns
+{% for intf in lr.dns.listeninterfaces|default([]) %}
+interface={{intf}}
+{% else %}
 interface=lo
-listen-address=127.0.0.1
+{% endfor %}
+
+{% for record in lr.dns.records|default([]) %}
+address=/{{record.fqdn}}/{{record.ipaddress}}
+{% endfor %}
 
 {% for lan in lr.lans %}
 {% if lan.upstream|default(False) == False and lan.dhcpd.enabled|default(False) == True %}

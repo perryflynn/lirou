@@ -128,6 +128,30 @@
                     }
                 },
 
+                "dns": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "exposeonupstream": { "type": "boolean" },
+                        "listeninterfaces": {
+                            "type": "array",
+                            "items": { "$ref": "#/definitions/interface-name" }
+                        },
+                        "records": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [ "fqdn", "ipaddress" ],
+                                "properties": {
+                                    "fqdn": { "type": "string" },
+                                    "ipaddress": { "$ref": "#/definitions/ip-address" }
+                                }
+                            }
+                        }
+                    }
+                },
+
                 "wifi": {
                     "type": "object",
                     "additionalProperties": false,
