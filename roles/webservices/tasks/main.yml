@@ -32,28 +32,78 @@
     - Restart munin-node
     - Restart munin
 
-- name: Ensure interface monitoring
+# - name: Ensure interface monitoring
+#   file:
+#     src: "/usr/share/munin/plugins/{{item.1}}"
+#     dest: "/etc/munin/plugins/{{item.1}}{{item.0 | brickburg.linuxrouter.interfacename}}"
+#     owner: root
+#     group: root
+#     state: "{{'link' if item.0.state == 'present' else 'absent'}}"
+#   loop: "{{lr.lans | product([ 'if_', 'if_err_' ]) | list}}"
+#   notify:
+#     - Restart munin-node
+#     - Restart munin
+
+# - name: Remove obsolete interfaces from monitoring
+#   file:
+#     path: "/etc/munin/plugins/{{item.1}}{{item.0}}"
+#     owner: root
+#     group: root
+#     state: absent
+#   loop: "{{lirou_absent_interfaces | product([ 'if_', 'if_err_' ]) | list}}"
+#   notify:
+#     - Restart munin-node
+#     - Restart munin
+
+
+
+
+- name: Get list of all existing munin plugin symlinks
+  find:
+    paths: '/etc/munin/plugins/'
+    patterns: '*'
+    file_type: link
+  register: findexistingchecks
+
+- name: Build munin check symlink list
+  set_fact:
+    checklist: "{{_checklist|from_yaml}}"
+    definedchecks: "{{ _checklist | from_yaml | map(attribute='linkname') | list }}"
+    existingchecks: "{{ findexistingchecks.files | map(attribute='path') | list }}"
+  vars:
+    _checklist: |
+      {% for checkitem in ((munin_default_checks + lr.munin.checks|default([])) if lr.munin.usedefaultchecks|default(True) else lr.munin.checks|default([])) %}
+      {% for check in checkitem.checks %}
+      {% for name in checkitem.names|default(['']) %}
+      - { targetname: '/usr/share/munin/plugins/{{check}}{{'' if name=='' else '_'}}', linkname: '/etc/munin/plugins/{{check}}{{'' if name=='' else '_'}}{{name}}' }
+      {% endfor %}
+      {% endfor %}
+      {% endfor %}
+
+- name: Ensure symlinks
   file:
-    src: "/usr/share/munin/plugins/{{item.1}}"
-    dest: "/etc/munin/plugins/{{item.1}}{{item.0 | brickburg.linuxrouter.interfacename}}"
+    src: "{{item.targetname}}"
+    dest: "{{item.linkname}}"
     owner: root
     group: root
-    state: "{{'link' if item.0.state == 'present' else 'absent'}}"
-  loop: "{{lr.lans | product([ 'if_', 'if_err_' ]) | list}}"
+    state: link
+  loop: "{{checklist}}"
   notify:
     - Restart munin-node
     - Restart munin
 
-- name: Remove obsolete interfaces from monitoring
+- name: Cleanup symlink not appearing in lists
   file:
-    path: "/etc/munin/plugins/{{item.1}}{{item.0}}"
-    owner: root
-    group: root
+    path: "{{item}}"
     state: absent
-  loop: "{{lirou_absent_interfaces | product([ 'if_', 'if_err_' ]) | list}}"
+  when: item not in definedchecks
+  loop: "{{existingchecks}}"
   notify:
     - Restart munin-node
     - Restart munin
+
+
+
 
 - name: Munin configuration
   template:

@@ -1,0 +1,32 @@
+---
+# brickburg/linuxrouter/roles/webservices/defaults/main.yml
+
+munin_default_checks:
+  - { checks: [ acpi ] }
+  - { checks: [ cpu ] }
+  - { checks: [ cpuspeed ] }
+  - { checks: [ df ] }
+  - { checks: [ df_inode ] }
+  - { checks: [ diskstats ] }
+  - { checks: [ entropy ] }
+  - { checks: [ forks ] }
+  - { checks: [ fw_conntrack ] }
+  - { checks: [ fw_forwarded_local ] }
+  - { checks: [ fw_packets ] }
+  - { checks: [ hddtemp_smartctl ] }
+  - { checks: [ interrupts ] }
+  - { checks: [ irqstats ] }
+  - { checks: [ load ] }
+  - { checks: [ memory ] }
+  - { checks: [ munin_stats ] }
+  - { checks: [ netstat ] }
+  - { checks: [ open_files ] }
+  - { checks: [ open_inodes ] }
+  - { checks: [ processes ] }
+  - { checks: [ proc_pri ] }
+  - { checks: [ swap ] }
+  - { checks: [ threads ] }
+  - { checks: [ uptime ] }
+  - { checks: [ users ] }
+  - { checks: [ vmstat ] }
+  - { checks: [ sensors ], names: [ temp ] }

@@ -144,7 +144,7 @@
                                 "additionalProperties": false,
                                 "required": [ "fqdn", "ipaddress" ],
                                 "properties": {
-                                    "fqdn": { "type": "string" },
+                                    "fqdn": { "type": "string", "minLength": 1 },
                                     "ipaddress": { "$ref": "#/definitions/ip-address" }
                                 }
                             }
@@ -345,6 +345,27 @@
                                 "then": { "not": { "required": [ "rename" ] } }
                             }
                         ]
+                    }
+                },
+
+                "munin": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "usedefaultchecks": { "type": "boolean" },
+                        "checks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [ "checks" ],
+                                "properties": {
+                                    "checks": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+                                    "names": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+                                    "categories": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+                                }
+                            }
+                        }
                     }
                 },
 
