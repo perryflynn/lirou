@@ -80,6 +80,17 @@
   notify:
     - Restart nginx
 
+- name: Webserver configuration
+  copy:
+    dest: /etc/nginx/htpasswd.lirou
+    owner: root
+    group: root
+    mode: u=rw,g=r
+    content: |
+      root:{{lr.root_password}}
+  notify:
+    - Restart nginx
+
 - name: Symlink munin into nginx www-root
   file:
     src: /var/cache/munin/www
@@ -94,6 +105,22 @@
   template:
     src: files/index.html.j2
     dest: /var/www/html/index.html
+    owner: root
+    group: root
+    mode: u=rw,go=r
+
+- name: Create docs folder
+  file:
+    path: /var/www/html/docs
+    owner: root
+    group: root
+    state: directory
+    mode: u=rwx,go=rx
+
+- name: Create documentation file
+  template:
+    src: files/docs.html.j2
+    dest: /var/www/html/docs/index.html
     owner: root
     group: root
     mode: u=rw,go=r

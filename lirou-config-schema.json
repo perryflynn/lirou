@@ -377,7 +377,9 @@
                             }
                         }
                     }
-                }
+                },
+
+                "documentation": { "type": "string" }
 
             }
         }
